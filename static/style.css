@@ -8,6 +8,7 @@ body {
     font-family: Arial, sans-serif;
     background: #f0f2f5;
     min-height: 100vh;
+    transition: background-image 0.3s ease;
 }
 
 /* ===== HEADER STYLES ===== */
@@ -46,12 +47,6 @@ header .developer-info .phone-number {
     color: #FFD700;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
     letter-spacing: 0.5px;
-}
-
-header .logo small {
-    display: block;
-    font-size: 12px;
-    opacity: 0.8;
 }
 
 header .user-info {
@@ -261,6 +256,36 @@ button:hover {
 
 .btn-warning:hover {
     background: #e65100;
+}
+
+/* ===== SETTINGS ===== */
+.settings-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    transition: 0.3s;
+}
+
+.settings-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.settings-card h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.settings-card input[type="file"] {
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.settings-card input[type="range"] {
+    width: 100%;
+    margin: 10px 0;
 }
 
 /* ===== PRODUCT FORM ===== */
@@ -500,5 +525,11 @@ footer {
     .footer-contact .footer-email {
         display: block;
         margin: 3px 0;
+    }
+    .settings-card {
+        grid-column: 1 / -1;
+    }
+    #settings .settings-grid {
+        grid-template-columns: 1fr;
     }
 }

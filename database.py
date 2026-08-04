@@ -10,7 +10,7 @@ def init_database():
     conn = get_connection()
     cursor = conn.cursor()
     
-    # ========== CREATE CATEGORIES TABLE ==========
+    # ========== CREATE TABLES ==========
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +21,6 @@ def init_database():
         )
     ''')
     
-    # ========== CREATE PRODUCTS TABLE ==========
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +35,6 @@ def init_database():
         )
     ''')
     
-    # ========== CREATE EMPLOYEES TABLE ==========
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +46,6 @@ def init_database():
         )
     ''')
     
-    # ========== CREATE SALES TABLE ==========
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +59,6 @@ def init_database():
         )
     ''')
     
-    # ========== CREATE SALE ITEMS TABLE ==========
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sale_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

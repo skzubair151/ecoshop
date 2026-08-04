@@ -16,8 +16,8 @@
                 <span id="shop-name-ru" style="display:none;">🏪 ЭкоShop</span>
             </h1>
             <div class="developer-info">
-                <span id="dev-en">Developed by Zubair</span>
-                <span id="dev-ru" style="display:none;">Разработано Зубаиром</span>
+                <span id="dev-en">Developed by ZUBAIR</span>
+                <span id="dev-ru" style="display:none;">Разработано ZUBAIR</span>
                 <br>
                 <span class="phone-number">📞 +996 990 115 990</span>
             </div>
@@ -39,6 +39,7 @@
         <button onclick="showPage('products')" id="nav-products">📦 <span id="nav-products-text">Products</span></button>
         <button onclick="showPage('sales')" id="nav-sales">💰 <span id="nav-sales-text">Sales</span></button>
         <button onclick="showPage('reports')" id="nav-reports">📈 <span id="nav-reports-text">Reports</span></button>
+        <button onclick="showPage('settings')" id="nav-settings">⚙️ <span id="nav-settings-text">Settings</span></button>
         {% if user.user_role == 'Admin' %}
         <button onclick="showPage('employees')" id="nav-employees" style="background:#ff9800;color:white;">👥 <span id="nav-employees-text">Employees</span></button>
         {% endif %}
@@ -163,6 +164,13 @@
                 <button onclick="loadReport('yearly')" class="btn-warning" id="report-yearly">📅 Yearly</button>
             </div>
 
+            <!-- Export Buttons -->
+            <div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
+                <button onclick="exportReport('excel')" class="btn-success" id="export-excel">📊 Export Excel</button>
+                <button onclick="exportReport('pdf')" class="btn-danger" id="export-pdf">📄 Export PDF</button>
+                <button onclick="exportReport('csv')" class="btn-warning" id="export-csv">📋 Export CSV</button>
+            </div>
+
             <div id="report-content">
                 <div class="report-summary" id="report-summary">
                     <div class="report-card">
@@ -216,6 +224,58 @@
             </div>
         </div>
 
+        <!-- ===== SETTINGS ===== -->
+        <div id="settings" class="page">
+            <h2 id="settings-title">⚙️ Settings</h2>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
+
+                <!-- Full Window Mode -->
+                <div class="settings-card">
+                    <h3 id="settings-fullscreen">🖥️ Full Window Mode</h3>
+                    <button onclick="toggleFullscreen()" class="btn-success" id="fullscreen-btn">⛶ Toggle Full Screen</button>
+                    <p style="margin-top:5px; font-size:12px; color:#888;" id="fullscreen-status">Current: Off</p>
+                </div>
+
+                <!-- Tab View -->
+                <div class="settings-card">
+                    <h3 id="settings-tabview">📑 Tab View</h3>
+                    <button onclick="toggleTabView()" class="btn-warning" id="tabview-btn">🔀 Switch View</button>
+                    <p style="margin-top:5px; font-size:12px; color:#888;" id="tabview-status">Current: Classic</p>
+                </div>
+
+                <!-- Font Selection -->
+                <div class="settings-card">
+                    <h3 id="settings-font">🔤 Font Selection</h3>
+                    <select id="font-select" onchange="changeFont(this.value)" style="width:100%; padding:10px;">
+                        <option value="Arial">Arial</option>
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Comic Sans MS">Comic Sans MS</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Segoe UI">Segoe UI</option>
+                    </select>
+                    <br>
+                    <label style="margin-top:10px; display:block;">Font Size:</label>
+                    <input type="range" id="font-size-slider" min="12" max="24" value="14" oninput="changeFontSize(this.value)" style="width:100%;">
+                    <span id="font-size-label">14px</span>
+                </div>
+
+                <!-- Background Image -->
+                <div class="settings-card">
+                    <h3 id="settings-bg">🖼️ Background Image</h3>
+                    <input type="file" id="bg-image-upload" accept="image/*" onchange="uploadBackgroundImage(event)" style="width:100%; padding:5px;">
+                    <br>
+                    <button onclick="resetBackgroundImage()" class="btn-danger" style="margin-top:5px;">🔄 Reset to Default</button>
+                    <p style="margin-top:5px; font-size:12px; color:#888;" id="bg-status">Current: Default</p>
+                </div>
+
+            </div>
+        </div>
+
         <!-- ===== EMPLOYEES (Admin Only) ===== -->
         <div id="employees" class="page">
             <h2 id="emp-title">👥 Employee Management</h2>
@@ -262,7 +322,7 @@
             </div>
             <div class="footer-developer">
                 <span id="footer-dev-en">Developed by <strong>ZUBAIR</strong></span>
-                <span id="footer-dev-ru" style="display:none;">Разработано <strong>ЗУБАИРОМ</strong></span>
+                <span id="footer-dev-ru" style="display:none;">Разработано <strong>ZUBAIR</strong></span>
             </div>
             <div class="footer-contact">
                 <span class="footer-phone">📞 WhatsApp/Mobile: <strong>+996 990 115 990</strong></span>
@@ -276,22 +336,18 @@
         // ========== TRANSLATIONS ==========
         const translations = {
             en: {
-                // Navigation
                 dashboard: 'Dashboard',
                 products: 'Products',
                 sales: 'Sales',
                 reports: 'Reports',
+                settings: 'Settings',
                 employees: 'Employees',
                 logout: 'Logout',
-                
-                // Dashboard
                 total_products: 'Total Products',
                 total_sales: 'Total Sales',
                 today_sales: "Today's Sales",
                 low_stock: 'Low Stock',
                 categories_title: '📂 Categories',
-                
-                // Products
                 add_product: 'Add Product',
                 save: 'Save',
                 cancel: 'Cancel',
@@ -310,14 +366,6 @@
                 label_price: 'Price:',
                 label_cost: 'Cost:',
                 label_quantity: 'Quantity:',
-                placeholder_barcode: 'Enter barcode',
-                placeholder_name_ru: 'Название на русском',
-                placeholder_name_en: 'Name in English',
-                placeholder_price: 'Selling price',
-                placeholder_cost: 'Purchase cost',
-                placeholder_quantity: 'Stock quantity',
-                
-                // Sales
                 scan_barcode: 'Scan or enter barcode:',
                 add_to_cart: 'Add to Cart',
                 cart: 'Cart',
@@ -331,8 +379,6 @@
                 payment_card: 'Card',
                 payment_transfer: 'Transfer',
                 cart_empty: 'Cart is empty',
-                
-                // Reports
                 reports_title: '📈 Reports',
                 daily: 'Daily',
                 weekly: 'Weekly',
@@ -354,8 +400,22 @@
                 low_category: 'Category',
                 low_stock_qty: 'Stock',
                 all_stock_ok: '✅ All products have sufficient stock!',
-                
-                // Employees
+                settings_title: '⚙️ Settings',
+                settings_fullscreen: '🖥️ Full Window Mode',
+                settings_tabview: '📑 Tab View',
+                settings_font: '🔤 Font Selection',
+                settings_bg: '🖼️ Background Image',
+                toggle_fullscreen: '⛶ Toggle Full Screen',
+                switch_view: '🔀 Switch View',
+                reset_bg: '🔄 Reset to Default',
+                current_off: 'Current: Off',
+                current_on: 'Current: On',
+                current_classic: 'Current: Classic',
+                current_tabbed: 'Current: Tabbed',
+                current_default: 'Current: Default',
+                export_excel: '📊 Export Excel',
+                export_pdf: '📄 Export PDF',
+                export_csv: '📋 Export CSV',
                 employee_management: '👥 Employee Management',
                 add_employee: 'Add New Employee',
                 existing_employees: 'Existing Employees',
@@ -376,27 +436,25 @@
                 emp_activate: 'Activate',
                 emp_inactivate: 'Inactivate',
                 emp_delete: 'Delete',
-                emp_placeholder_id: 'EMP001',
-                emp_placeholder_name: 'Full Name',
-                emp_placeholder_password: 'Password'
+                confirm_delete: '⚠️ Confirm Deletion',
+                enter_admin_password: 'Enter Admin Password to Delete:',
+                invalid_password: '❌ Invalid Password!',
+                delete_success: '✅ Deleted Successfully!',
+                delete_failed: '❌ Deletion Failed!'
             },
             ru: {
-                // Navigation
                 dashboard: 'Панель',
                 products: 'Товары',
                 sales: 'Продажи',
                 reports: 'Отчеты',
+                settings: 'Настройки',
                 employees: 'Сотрудники',
                 logout: 'Выйти',
-                
-                // Dashboard
                 total_products: 'Всего товаров',
                 total_sales: 'Всего продаж',
                 today_sales: 'Продажи сегодня',
                 low_stock: 'Низкий запас',
                 categories_title: '📂 Категории',
-                
-                // Products
                 add_product: 'Добавить товар',
                 save: 'Сохранить',
                 cancel: 'Отмена',
@@ -415,14 +473,6 @@
                 label_price: 'Цена:',
                 label_cost: 'Себестоимость:',
                 label_quantity: 'Количество:',
-                placeholder_barcode: 'Введите штрих-код',
-                placeholder_name_ru: 'Название на русском',
-                placeholder_name_en: 'Name in English',
-                placeholder_price: 'Цена продажи',
-                placeholder_cost: 'Цена закупки',
-                placeholder_quantity: 'Количество на складе',
-                
-                // Sales
                 scan_barcode: 'Введите штрих-код:',
                 add_to_cart: 'Добавить',
                 cart: 'Корзина',
@@ -436,8 +486,6 @@
                 payment_card: 'Карта',
                 payment_transfer: 'Перевод',
                 cart_empty: 'Корзина пуста',
-                
-                // Reports
                 reports_title: '📈 Отчеты',
                 daily: 'Дневной',
                 weekly: 'Недельный',
@@ -459,8 +507,22 @@
                 low_category: 'Категория',
                 low_stock_qty: 'Остаток',
                 all_stock_ok: '✅ Все товары в достаточном количестве!',
-                
-                // Employees
+                settings_title: '⚙️ Настройки',
+                settings_fullscreen: '🖥️ Полноэкранный режим',
+                settings_tabview: '📑 Вкладки',
+                settings_font: '🔤 Выбор шрифта',
+                settings_bg: '🖼️ Фоновое изображение',
+                toggle_fullscreen: '⛶ Полный экран',
+                switch_view: '🔀 Сменить вид',
+                reset_bg: '🔄 Сбросить',
+                current_off: 'Текущий: Выкл',
+                current_on: 'Текущий: Вкл',
+                current_classic: 'Текущий: Классический',
+                current_tabbed: 'Текущий: Вкладки',
+                current_default: 'Текущий: По умолчанию',
+                export_excel: '📊 Экспорт Excel',
+                export_pdf: '📄 Экспорт PDF',
+                export_csv: '📋 Экспорт CSV',
                 employee_management: '👥 Управление сотрудниками',
                 add_employee: 'Добавить сотрудника',
                 existing_employees: 'Существующие сотрудники',
@@ -481,9 +543,11 @@
                 emp_activate: 'Активировать',
                 emp_inactivate: 'Деактивировать',
                 emp_delete: 'Удалить',
-                emp_placeholder_id: 'EMP001',
-                emp_placeholder_name: 'Полное имя',
-                emp_placeholder_password: 'Пароль'
+                confirm_delete: '⚠️ Подтверждение удаления',
+                enter_admin_password: 'Введите пароль администратора для удаления:',
+                invalid_password: '❌ Неверный пароль!',
+                delete_success: '✅ Успешно удалено!',
+                delete_failed: '❌ Ошибка удаления!'
             }
         };
 
@@ -495,23 +559,21 @@
         let allProducts = [];
         let currentReportPeriod = 'daily';
         let currentUserRole = '{{ user.user_role }}';
+        let isFullscreen = false;
+        let isTabView = false;
 
         // ========== LANGUAGE ==========
         function setLanguage(lang) {
             currentLang = lang;
             
-            // Update language buttons
             document.getElementById('lang-en').classList.toggle('lang-active', lang === 'en');
             document.getElementById('lang-ru').classList.toggle('lang-active', lang === 'ru');
             
-            // ===== TOGGLE SHOP NAME IN HEADER =====
             if (lang === 'ru') {
                 document.getElementById('shop-name-en').style.display = 'none';
                 document.getElementById('shop-name-ru').style.display = 'inline';
                 document.getElementById('dev-en').style.display = 'none';
                 document.getElementById('dev-ru').style.display = 'inline';
-                
-                // ===== TOGGLE FOOTER =====
                 document.getElementById('footer-shop-en').style.display = 'none';
                 document.getElementById('footer-shop-ru').style.display = 'inline';
                 document.getElementById('footer-dev-en').style.display = 'none';
@@ -521,8 +583,6 @@
                 document.getElementById('shop-name-ru').style.display = 'none';
                 document.getElementById('dev-en').style.display = 'inline';
                 document.getElementById('dev-ru').style.display = 'none';
-                
-                // ===== TOGGLE FOOTER =====
                 document.getElementById('footer-shop-en').style.display = 'inline';
                 document.getElementById('footer-shop-ru').style.display = 'none';
                 document.getElementById('footer-dev-en').style.display = 'inline';
@@ -534,7 +594,6 @@
             loadProducts();
             loadCategories();
             
-            // Reload reports if on reports page
             if (document.getElementById('reports').classList.contains('active')) {
                 loadReport(currentReportPeriod);
             }
@@ -543,19 +602,16 @@
         function updateAllText() {
             const t = translations[currentLang];
             
-            // ===== HEADER =====
             document.getElementById('logout-btn').textContent = '🚪 ' + t.logout;
-            
-            // ===== NAVIGATION =====
             document.getElementById('nav-dashboard-text').textContent = t.dashboard;
             document.getElementById('nav-products-text').textContent = t.products;
             document.getElementById('nav-sales-text').textContent = t.sales;
             document.getElementById('nav-reports-text').textContent = t.reports;
+            document.getElementById('nav-settings-text').textContent = t.settings;
             if (document.getElementById('nav-employees-text')) {
                 document.getElementById('nav-employees-text').textContent = t.employees;
             }
             
-            // ===== DASHBOARD =====
             document.getElementById('dash-title').textContent = '📊 ' + t.dashboard;
             document.getElementById('stat-products-label').textContent = t.total_products;
             document.getElementById('stat-sales-label').textContent = t.total_sales;
@@ -563,7 +619,6 @@
             document.getElementById('stat-lowstock-label').textContent = t.low_stock;
             document.getElementById('cat-stats-title').textContent = t.categories_title;
             
-            // ===== PRODUCTS =====
             document.getElementById('prod-title').textContent = '📦 ' + t.products;
             document.getElementById('add-product-btn').textContent = '➕ ' + t.add_product;
             document.getElementById('form-title').textContent = t.add_product;
@@ -584,15 +639,6 @@
             document.getElementById('th-qty').textContent = t.qty;
             document.getElementById('th-actions').textContent = t.actions;
             
-            // Update placeholders
-            document.getElementById('p-barcode').placeholder = t.placeholder_barcode;
-            document.getElementById('p-name-ru').placeholder = t.placeholder_name_ru;
-            document.getElementById('p-name-en').placeholder = t.placeholder_name_en;
-            document.getElementById('p-price').placeholder = t.placeholder_price;
-            document.getElementById('p-cost').placeholder = t.placeholder_cost;
-            document.getElementById('p-quantity').placeholder = t.placeholder_quantity;
-            
-            // ===== SALES =====
             document.getElementById('sales-title').textContent = '💰 ' + t.sales;
             document.getElementById('scan-label').textContent = t.scan_barcode;
             document.getElementById('add-cart-btn').textContent = '➕ ' + t.add_to_cart;
@@ -615,38 +661,43 @@
             document.getElementById('customer-name').placeholder = t.customer_name;
             document.getElementById('cart-discount').placeholder = t.discount;
             
-            // ===== REPORTS =====
             document.getElementById('reports-title').textContent = t.reports_title;
             document.getElementById('report-daily').textContent = '📅 ' + t.daily;
             document.getElementById('report-weekly').textContent = '📅 ' + t.weekly;
             document.getElementById('report-monthly').textContent = '📅 ' + t.monthly;
             document.getElementById('report-yearly').textContent = '📅 ' + t.yearly;
+            document.getElementById('export-excel').textContent = t.export_excel;
+            document.getElementById('export-pdf').textContent = t.export_pdf;
+            document.getElementById('export-csv').textContent = t.export_csv;
             
             document.getElementById('report-label-sales').textContent = t.total_sales_report;
             document.getElementById('report-label-revenue').textContent = t.total_revenue;
             document.getElementById('report-label-profit').textContent = t.total_profit;
             document.getElementById('report-label-avg').textContent = t.average_sale;
-            
             document.getElementById('report-chart-title').textContent = t.sales_chart;
             document.getElementById('report-top-title').textContent = t.top_products;
             document.getElementById('report-low-title').textContent = t.low_stock_alert;
-            
             document.getElementById('report-top-product').textContent = t.product;
             document.getElementById('report-top-qty').textContent = t.qty_sold;
             document.getElementById('report-top-revenue').textContent = t.revenue;
             document.getElementById('report-top-orders').textContent = t.orders;
-            
             document.getElementById('report-low-barcode').textContent = t.low_barcode;
             document.getElementById('report-low-product').textContent = t.low_product;
             document.getElementById('report-low-category').textContent = t.low_category;
             document.getElementById('report-low-stock').textContent = t.low_stock_qty;
             
-            // ===== EMPLOYEES =====
+            document.getElementById('settings-title').textContent = t.settings_title;
+            document.getElementById('settings-fullscreen').textContent = t.settings_fullscreen;
+            document.getElementById('settings-tabview').textContent = t.settings_tabview;
+            document.getElementById('settings-font').textContent = t.settings_font;
+            document.getElementById('settings-bg').textContent = t.settings_bg;
+            document.getElementById('fullscreen-btn').textContent = t.toggle_fullscreen;
+            document.getElementById('tabview-btn').textContent = t.switch_view;
+            
             if (currentUserRole === 'Admin') {
                 document.getElementById('emp-title').textContent = t.employee_management;
                 document.getElementById('emp-add-title').textContent = '➕ ' + t.add_employee;
                 document.getElementById('emp-existing-title').textContent = '👤 ' + t.existing_employees;
-                
                 document.getElementById('emp-label-id').textContent = t.emp_id;
                 document.getElementById('emp-label-name').textContent = t.emp_name;
                 document.getElementById('emp-label-password').textContent = t.emp_password;
@@ -654,25 +705,15 @@
                 document.getElementById('emp-role-staff').textContent = t.emp_staff;
                 document.getElementById('emp-role-admin').textContent = t.emp_admin;
                 document.getElementById('emp-add-btn').textContent = '➕ ' + t.emp_add;
-                
                 document.getElementById('emp-th-id').textContent = t.emp_th_id;
                 document.getElementById('emp-th-name').textContent = t.emp_th_name;
                 document.getElementById('emp-th-role').textContent = t.emp_th_role;
                 document.getElementById('emp-th-status').textContent = t.emp_th_status;
                 document.getElementById('emp-th-actions').textContent = t.emp_th_actions;
-                
-                document.getElementById('emp-id').placeholder = t.emp_placeholder_id;
-                document.getElementById('emp-name').placeholder = t.emp_placeholder_name;
-                document.getElementById('emp-password').placeholder = t.emp_placeholder_password;
             }
             
-            // Update category dropdown if open
             populateCategoryDropdown();
-            
-            // Re-render cart if not empty
-            if (cart.length > 0) {
-                renderCart();
-            }
+            if (cart.length > 0) renderCart();
         }
 
         // ========== PAGE NAVIGATION ==========
@@ -681,12 +722,12 @@
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
             document.getElementById(page).classList.add('active');
             
-            // Highlight nav button
             const navMap = {
                 'dashboard': 'nav-dashboard',
                 'products': 'nav-products',
                 'sales': 'nav-sales',
                 'reports': 'nav-reports',
+                'settings': 'nav-settings',
                 'employees': 'nav-employees'
             };
             if (navMap[page]) {
@@ -842,9 +883,62 @@
         }
 
         function deleteProduct(id) {
-            if (!confirm('Delete this product?')) return;
-            fetch(`/api/products/${id}`, { method: 'DELETE' })
-                .then(() => { loadProducts(); loadDashboard(); });
+            if (currentUserRole !== 'Admin') {
+                alert('⚠️ Only Admin can delete!');
+                return;
+            }
+            showAdminPasswordPrompt(`Delete this product?`, 'product', id);
+        }
+
+        // ========== ADMIN PASSWORD PROTECTION ==========
+        function showAdminPasswordPrompt(message, type, id) {
+            const t = translations[currentLang];
+            const password = prompt(`${t.confirm_delete}\n\n${message}\n\n${t.enter_admin_password}`);
+            
+            if (password === null) return;
+            if (!password) {
+                alert('❌ Password required!');
+                return;
+            }
+
+            fetch('/api/verify_admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    proceedWithDelete(type, id);
+                } else {
+                    alert('❌ ' + t.invalid_password);
+                }
+            })
+            .catch(err => alert('❌ Error: ' + err.message));
+        }
+
+        function proceedWithDelete(type, id) {
+            const t = translations[currentLang];
+            let url = '';
+            
+            if (type === 'product') url = `/api/products/${id}`;
+            else if (type === 'employee') url = `/api/employees/${id}`;
+            else if (type === 'category') url = `/api/categories/${id}`;
+            else return;
+
+            fetch(url, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        alert('✅ ' + t.delete_success);
+                        if (type === 'product') { loadProducts(); loadDashboard(); }
+                        else if (type === 'employee') loadEmployees();
+                        else if (type === 'category') { loadCategories(); loadProducts(); loadDashboard(); }
+                    } else {
+                        alert('❌ ' + (result.message || t.delete_failed));
+                    }
+                })
+                .catch(err => alert('❌ ' + err.message));
         }
 
         // ========== SALES ==========
@@ -1059,7 +1153,94 @@
                 });
         }
 
-        // ========== EMPLOYEES (Admin Only) ==========
+        // ========== EXPORT REPORTS ==========
+        function exportReport(format) {
+            const t = translations[currentLang];
+            const period = currentReportPeriod;
+            
+            fetch(`/api/reports/export?period=${period}&format=${format}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Create download link
+                        const link = document.createElement('a');
+                        link.href = data.url;
+                        link.download = data.filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        alert('❌ ' + (data.message || 'Export failed!'));
+                    }
+                })
+                .catch(err => alert('❌ Export error: ' + err.message));
+        }
+
+        // ========== SETTINGS ==========
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                isFullscreen = true;
+                document.getElementById('fullscreen-status').textContent = translations[currentLang].current_on;
+            } else {
+                document.exitFullscreen();
+                isFullscreen = false;
+                document.getElementById('fullscreen-status').textContent = translations[currentLang].current_off;
+            }
+        }
+
+        function toggleTabView() {
+            isTabView = !isTabView;
+            const pages = document.querySelectorAll('.page');
+            const t = translations[currentLang];
+            
+            if (isTabView) {
+                pages.forEach(p => p.style.display = 'block');
+                document.getElementById('tabview-status').textContent = t.current_tabbed;
+            } else {
+                pages.forEach(p => {
+                    if (!p.classList.contains('active')) {
+                        p.style.display = 'none';
+                    }
+                });
+                document.getElementById('tabview-status').textContent = t.current_classic;
+            }
+        }
+
+        function changeFont(font) {
+            document.body.style.fontFamily = font;
+        }
+
+        function changeFontSize(size) {
+            document.body.style.fontSize = size + 'px';
+            document.getElementById('font-size-label').textContent = size + 'px';
+        }
+
+        function uploadBackgroundImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.body.style.backgroundImage = `url('${e.target.result}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
+                document.getElementById('bg-status').textContent = 'Current: Custom Image';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetBackgroundImage() {
+            document.body.style.backgroundImage = '';
+            document.body.style.backgroundSize = '';
+            document.body.style.backgroundPosition = '';
+            document.body.style.backgroundAttachment = '';
+            document.getElementById('bg-status').textContent = translations[currentLang].current_default;
+            document.getElementById('bg-image-upload').value = '';
+        }
+
+        // ========== EMPLOYEES ==========
         function loadEmployees() {
             fetch('/api/employees')
                 .then(res => res.json())
@@ -1138,13 +1319,14 @@
         }
 
         function deleteEmployee(id) {
-            if (!confirm('Delete this employee?')) return;
-            fetch(`/api/employees/${id}`, { method: 'DELETE' })
-                .then(res => res.json())
-                .then(() => loadEmployees());
+            if (currentUserRole !== 'Admin') {
+                alert('⚠️ Only Admin can delete!');
+                return;
+            }
+            showAdminPasswordPrompt(`Delete this employee?`, 'employee', id);
         }
 
-        // ========== ENTER KEY FOR BARCODE ==========
+        // ========== EVENT LISTENERS ==========
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('scan-barcode').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -1159,7 +1341,6 @@
                 }
             });
 
-            // Set default language to English
             setLanguage('en');
         });
     </script>
