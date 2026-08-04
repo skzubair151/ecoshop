@@ -1697,56 +1697,48 @@
         }
 
         function exportReport(format) {
-            const period = currentReportPeriod;
+    const period = currentReportPeriod;
+    
+    // Show loading
+    const btn = document.getElementById(`export-${format}`);
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.innerHTML = '⏳ Loading...';
+        btn.disabled = true;
+    }
+    
+    fetch(`/api/reports/export?period=${period}&format=${format}`)
+        .then(res => {
+            if (format === 'pdf') {
+                return res.blob();
+            }
+            return res.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `sales_report_${period}.${format === 'excel' ? 'csv' : format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
             
-            fetch(`/api/reports/export?period=${period}&format=${format}`)
-                .then(res => {
-                    if (format === 'pdf') {
-                        return res.json();
-                    }
-                    return res.blob();
-                })
-                .then(data => {
-                    if (format === 'pdf') {
-                        if (data.status === 'success') {
-                            let text = 'Sales Report\n';
-                            text += '='.repeat(50) + '\n';
-                            text += `Period: ${period}\n`;
-                            text += `Date: ${new Date().toLocaleDateString()}\n`;
-                            text += '='.repeat(50) + '\n\n';
-                            
-                            data.data.forEach(row => {
-                                text += `Date: ${row.date}\n`;
-                                text += `Invoice: ${row.invoice_no}\n`;
-                                text += `Customer: ${row.customer_name}\n`;
-                                text += `Total: ${row.total_amount}\n`;
-                                text += `Discount: ${row.discount}\n`;
-                                text += `Payment: ${row.payment_method}\n`;
-                                text += `Employee: ${row.employee_name}\n`;
-                                text += '-'.repeat(30) + '\n';
-                            });
-                            
-                            const blob = new Blob([text], { type: 'text/plain' });
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(blob);
-                            link.download = `sales_report_${period}.txt`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        } else {
-                            alert('❌ Export failed!');
-                        }
-                    } else {
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(data);
-                        link.download = `sales_report_${period}.${format === 'excel' ? 'csv' : format}`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }
-                })
-                .catch(err => alert('❌ Export error: ' + err.message));
-        }
+            // Reset button
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            alert('❌ Export error: ' + err.message);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+}
 
         // ========== SETTINGS ==========
         let isFullscreen = false;
