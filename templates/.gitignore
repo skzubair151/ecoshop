@@ -1,9 +1,0 @@
-ecoshop.db
-__pycache__/
-*.pyc
-*.db
-*.sqlite
-.env
-.DS_Store
-venv/
-env/
