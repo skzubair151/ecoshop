@@ -195,15 +195,30 @@ def get_db():
 
 # ========== ROUTES ==========
 
+# ===== HOME PAGE - REDIRECT TO LOGIN IF NOT LOGGED IN =====
+@app.route('/')
+def index():
+    """Home page - redirect to login if not logged in, else dashboard"""
+    if 'user_id' in session:
+        return render_template('index.html', user=session)
+    else:
+        return redirect(url_for('login'))
+
+# ===== LOGIN PAGE =====
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Login page - shows first"""
+    # If already logged in, go to dashboard
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
         employee_id = request.form.get('employee_id')
         password = request.form.get('password')
         try:
             conn = get_db()
             c = conn.cursor()
-            c.execute('SELECT * FROM employees WHERE employee_id = ? AND password = ?', (employee_id, password))
+            c.execute('SELECT * FROM employees WHERE employee_id = ? AND password = ? AND status = "Active"', (employee_id, password))
             user = c.fetchone()
             conn.close()
             if user:
@@ -214,13 +229,16 @@ def login():
             return jsonify({'status': 'error', 'message': 'Invalid credentials!'})
         except Exception as e:
             return jsonify({'status': 'error', 'message': str(e)})
+    
     return render_template('login.html')
 
+# ===== LOGOUT =====
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
+# ===== LOGIN REQUIRED DECORATOR =====
 def login_required(f):
     def wrapper(*args, **kwargs):
         if 'user_id' not in session:
@@ -229,11 +247,13 @@ def login_required(f):
     wrapper.__name__ = f.__name__
     return wrapper
 
-@app.route('/')
+# ===== DASHBOARD (Protected) =====
+@app.route('/dashboard')
 @login_required
-def index():
+def dashboard():
     return render_template('index.html', user=session)
 
+# ===== API ROUTES (Protected) =====
 @app.route('/api/products')
 @login_required
 def get_products():
