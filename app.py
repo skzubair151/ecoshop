@@ -21,34 +21,50 @@ def get_db():
 
 # ========== INITIALIZE DATABASE ==========
 def ensure_database():
+    """Ensure database exists with all tables and data"""
     try:
+        print(f"📂 Database path: {DB_NAME}")
+        
+        # Check if database file exists
         if not os.path.exists(DB_NAME):
             print("🔄 Database not found. Creating...")
             from database import init_database
             init_database()
+            print("✅ Database created successfully!")
             return True
         
+        # Check if tables exist
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
         if not cursor.fetchone():
+            print("🔄 Tables missing. Recreating database...")
             conn.close()
             os.remove(DB_NAME)
             from database import init_database
             init_database()
             return True
         
+        # Check if employees exist
         cursor.execute("SELECT COUNT(*) FROM employees")
         count = cursor.fetchone()[0]
         conn.close()
         
         if count == 0:
+            print("🔄 No employees found. Recreating database...")
             os.remove(DB_NAME)
             from database import init_database
             init_database()
             return True
             
-        print("✅ Database ready!")
+        # Check if products exist
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM products")
+        prod_count = cursor.fetchone()[0]
+        conn.close()
+        
+        print(f"✅ Database ready! Found {count} employees, {prod_count} products.")
         return True
         
     except Exception as e:
@@ -56,6 +72,7 @@ def ensure_database():
         if os.path.exists(DB_NAME):
             try:
                 os.remove(DB_NAME)
+                print("🔄 Removed corrupted database...")
             except:
                 pass
         from database import init_database
@@ -82,16 +99,15 @@ def login():
         password = request.form.get('password')
         
         try:
-            if not os.path.exists(DB_NAME):
-                return jsonify({'status': 'error', 'message': 'Database not found. Please try again.'})
+            # Ensure database exists
+            ensure_database()
             
             conn = get_db()
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
             if not cursor.fetchone():
                 conn.close()
-                ensure_database()
-                return jsonify({'status': 'error', 'message': 'Database initialized. Please try again.'})
+                return jsonify({'status': 'error', 'message': 'Database not initialized. Please try again.'})
             
             cursor.execute('SELECT * FROM employees WHERE employee_id = ? AND password = ? AND status = "Active"', (employee_id, password))
             user = cursor.fetchone()
@@ -353,7 +369,12 @@ def get_stats():
     low_stock = result['count'] if result else 0
     
     conn.close()
-    return jsonify({'total_products': total_products, 'total_sales': total_sales, 'today_sales': today_sales, 'low_stock': low_stock})
+    return jsonify({
+        'total_products': total_products, 
+        'total_sales': total_sales, 
+        'today_sales': today_sales, 
+        'low_stock': low_stock
+    })
 
 # ========== SALES ==========
 @app.route('/api/sales', methods=['POST'])

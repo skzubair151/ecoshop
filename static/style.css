@@ -11,7 +11,7 @@ body {
     transition: background-image 0.3s ease;
 }
 
-/* ===== HEADER STYLES ===== */
+/* ===== HEADER ===== */
 header {
     background: linear-gradient(135deg, #1a73e8, #0d47a1);
     color: white;
@@ -27,7 +27,6 @@ header {
 header .logo h1 {
     font-size: 38px;
     font-weight: bold;
-    margin-bottom: 5px;
 }
 
 header .logo h1 span {
@@ -46,7 +45,6 @@ header .developer-info .phone-number {
     font-weight: bold;
     color: #FFD700;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    letter-spacing: 0.5px;
 }
 
 header .user-info {
@@ -97,7 +95,7 @@ header .user-info .role {
     background: #b71c1c;
 }
 
-/* ===== NAVIGATION STYLES ===== */
+/* ===== NAVIGATION ===== */
 nav {
     background: white;
     padding: 12px 20px;
@@ -131,7 +129,7 @@ nav button.active {
     color: white;
 }
 
-/* ===== MAIN CONTAINER ===== */
+/* ===== MAIN ===== */
 .container {
     max-width: 1200px;
     margin: 20px auto;
@@ -203,8 +201,7 @@ tr:hover {
 }
 
 /* ===== FORMS ===== */
-input,
-select {
+input, select {
     padding: 10px;
     margin: 5px;
     border: 1px solid #ddd;
@@ -212,8 +209,7 @@ select {
     font-size: 14px;
 }
 
-input[type="text"],
-input[type="number"] {
+input[type="text"], input[type="number"] {
     width: 100%;
     max-width: 300px;
 }
@@ -392,7 +388,7 @@ button:hover {
     font-weight: bold;
 }
 
-/* ===== SETTINGS CARD STYLES ===== */
+/* ===== SETTINGS ===== */
 .settings-card {
     background: #f8f9fa;
     padding: 20px;
@@ -423,33 +419,7 @@ button:hover {
     margin: 10px 0;
 }
 
-.settings-card .btn-success {
-    background: #43a047;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.settings-card .btn-success:hover {
-    background: #2e7d32;
-}
-
-.settings-card .btn-danger {
-    background: #e53935;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.settings-card .btn-danger:hover {
-    background: #b71c1c;
-}
-
-/* ===== FOOTER STYLES ===== */
+/* ===== FOOTER ===== */
 footer {
     text-align: center;
     padding: 25px 20px;
