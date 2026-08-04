@@ -1,70 +1,471 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏪 EcoShop</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* ===== RESET ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        header .logo h1 {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        header .logo .developer {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        header .logo .phone {
+            font-size: 18px;
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        header .user-info {
+            text-align: right;
+        }
+
+        header .user-info .name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        header .user-info .role {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .lang-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 5px 15px;
+            margin: 0 3px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .lang-btn:hover { background: rgba(255,255,255,0.4); }
+        .lang-btn.active { background: rgba(255,255,255,0.4); }
+
+        .logout-btn {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover { background: #b71c1c; }
+
+        /* ===== NAVIGATION TABS ===== */
+        nav {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-bottom: 3px solid #1a73e8;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav button {
+            padding: 10px 25px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: 0.3s;
+            color: #555;
+            position: relative;
+        }
+
+        nav button:hover {
+            background: #e8eaf6;
+            color: #1a73e8;
+        }
+
+        nav button.active {
+            background: #1a73e8;
+            color: white;
+            box-shadow: 0 2px 10px rgba(26,115,232,0.3);
+        }
+
+        nav button .badge-tab {
+            background: #e53935;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            max-width: 1300px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* ===== PAGES ===== */
+        .page {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page h2 {
+            color: #1a73e8;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 2px solid #e8eaf6;
+            padding-bottom: 10px;
+        }
+
+        /* ===== STATS CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .icon { font-size: 30px; }
+        .stat-card h3 { font-size: 14px; color: #555; margin: 5px 0; }
+        .stat-card p { font-size: 32px; font-weight: bold; color: #1a73e8; }
+
+        /* ===== CATEGORY GRID ===== */
+        .category-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .category-item {
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+            transition: 0.3s;
+            cursor: default;
+        }
+
+        .category-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* ===== TABLES ===== */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #e8eaf6;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tr:hover td { background: #f8f9ff; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* ===== FORMS ===== */
+        input, select {
+            padding: 10px 12px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: 0.3s;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            border-color: #1a73e8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            max-width: 280px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-primary:hover { background: #0d47a1; transform: translateY(-2px); }
+
+        .btn-success { background: #43a047; color: white; }
+        .btn-success:hover { background: #2e7d32; transform: translateY(-2px); }
+
+        .btn-danger { background: #e53935; color: white; }
+        .btn-danger:hover { background: #b71c1c; transform: translateY(-2px); }
+
+        .btn-warning { background: #ff9800; color: white; }
+        .btn-warning:hover { background: #e65100; transform: translateY(-2px); }
+
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+        /* ===== PRODUCT FORM ===== */
+        .product-form {
+            display: none;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            background: #fafafa;
+        }
+
+        .product-form.show { display: block; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-row .full { grid-column: 1 / -1; }
+
+        /* ===== CART ===== */
+        .cart-total {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        /* ===== SETTINGS CARDS ===== */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .settings-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e8eaf6;
+            transition: 0.3s;
+        }
+
+        .settings-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .settings-card h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .settings-card input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .settings-card input[type="range"] {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            margin-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        footer .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        footer .footer-shop {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+
+        footer .footer-dev {
+            font-size: 14px;
+            color: #555;
+        }
+
+        footer .footer-dev strong { color: #1a73e8; }
+
+        footer .footer-contact {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            header { flex-direction: column; text-align: center; }
+            header .user-info { margin-top: 10px; text-align: center; }
+            nav button { width: 100%; text-align: center; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .category-grid { justify-content: center; }
+        }
+    </style>
 </head>
 <body>
 
     <!-- ===== HEADER ===== -->
     <header>
         <div class="logo">
-            <h1>
-                <span id="shop-name-en">🏪 EcoShop</span>
-                <span id="shop-name-ru" style="display:none;">🏪 ЭкоShop</span>
-            </h1>
-            <div class="developer-info">
-                <span id="dev-en">Developed by ZUBAIR</span>
-                <span id="dev-ru" style="display:none;">Разработано ZUBAIR</span>
-                <br>
-                <span class="phone-number">📞 +996 990 115 990</span>
-            </div>
+            <h1>🏪 <span id="shop-name">EcoShop</span></h1>
+            <div class="developer">Developed by <strong>ZUBAIR</strong></div>
+            <div class="phone">📞 +996 990 115 990</div>
         </div>
         <div>
-            <button class="lang-btn" id="lang-en" onclick="setLanguage('en')">🇬🇧 EN</button>
+            <button class="lang-btn active" id="lang-en" onclick="setLanguage('en')">🇬🇧 EN</button>
             <button class="lang-btn" id="lang-ru" onclick="setLanguage('ru')">🇷🇺 RU</button>
         </div>
         <div class="user-info">
-            <span class="name" id="user-name">{{ user.user_name }}</span>
+            <div class="name" id="user-name">{{ user.user_name }}</div>
             <span class="role" id="user-role">{{ user.user_role }}</span>
-            <a href="/logout"><button class="logout-btn" id="logout-btn">🚪 Logout</button></a>
+            <a href="/logout"><button class="logout-btn">🚪 Logout</button></a>
         </div>
     </header>
 
-    <!-- ===== NAVIGATION ===== -->
+    <!-- ===== NAVIGATION TABS ===== -->
     <nav id="main-nav">
-        <button onclick="showPage('dashboard')" id="nav-dashboard" class="active">📊 <span id="nav-dashboard-text">Dashboard</span></button>
-        <button onclick="showPage('products')" id="nav-products">📦 <span id="nav-products-text">Products</span></button>
-        <button onclick="showPage('sales')" id="nav-sales">💰 <span id="nav-sales-text">Sales</span></button>
-        <button onclick="showPage('reports')" id="nav-reports">📈 <span id="nav-reports-text">Reports</span></button>
-        <button onclick="showPage('settings')" id="nav-settings">⚙️ <span id="nav-settings-text">Settings</span></button>
+        <button class="active" onclick="showTab('dashboard')">📊 <span id="tab-dashboard">Dashboard</span></button>
+        <button onclick="showTab('products')">📦 <span id="tab-products">Products</span></button>
+        <button onclick="showTab('sales')">💰 <span id="tab-sales">Sales</span></button>
+        <button onclick="showTab('reports')">📈 <span id="tab-reports">Reports</span></button>
+        <button onclick="showTab('settings')">⚙️ <span id="tab-settings">Settings</span></button>
         {% if user.user_role == 'Admin' %}
-        <button onclick="showPage('employees')" id="nav-employees" style="background:#ff9800;color:white;">👥 <span id="nav-employees-text">Employees</span></button>
+        <button onclick="showTab('employees')" style="background:#ff9800;color:white;">👥 <span id="tab-employees">Employees</span></button>
         {% endif %}
     </nav>
 
     <!-- ===== MAIN CONTENT ===== -->
     <div class="container">
 
-        <!-- ===== DASHBOARD ===== -->
+        <!-- ===== DASHBOARD TAB ===== -->
         <div id="dashboard" class="page active">
             <h2 id="dash-title">📊 Dashboard</h2>
-            <div class="stats">
+            <div class="stats-grid" id="stats-grid">
                 <div class="stat-card">
+                    <div class="icon">📦</div>
                     <h3 id="stat-products-label">Total Products</h3>
                     <p id="stat-products">0</p>
                 </div>
                 <div class="stat-card">
+                    <div class="icon">💰</div>
                     <h3 id="stat-sales-label">Total Sales</h3>
                     <p id="stat-sales">0</p>
                 </div>
                 <div class="stat-card">
+                    <div class="icon">📊</div>
                     <h3 id="stat-today-label">Today's Sales</h3>
                     <p id="stat-today">0</p>
                 </div>
                 <div class="stat-card">
+                    <div class="icon">⚠️</div>
                     <h3 id="stat-lowstock-label">Low Stock</h3>
                     <p id="stat-lowstock">0</p>
                 </div>
@@ -75,10 +476,10 @@
             </div>
         </div>
 
-        <!-- ===== PRODUCTS ===== -->
+        <!-- ===== PRODUCTS TAB ===== -->
         <div id="products" class="page">
             <h2 id="prod-title">📦 Products</h2>
-            <button onclick="showAddProduct()" id="add-product-btn">➕ Add Product</button>
+            <button class="btn btn-primary" onclick="showAddProduct()">➕ <span id="add-product-btn">Add Product</span></button>
 
             <div class="product-form" id="product-form">
                 <h3 id="form-title">Add Product</h3>
@@ -91,50 +492,54 @@
                     <div><label id="label-cost">Cost:</label><input type="number" id="p-cost" placeholder="Purchase cost"></div>
                     <div><label id="label-quantity">Quantity:</label><input type="number" id="p-quantity" placeholder="Stock quantity"></div>
                 </div>
-                <button onclick="saveProduct()" id="save-btn">💾 Save</button>
-                <button onclick="document.getElementById('product-form').style.display='none'" class="btn-danger" id="cancel-btn">❌ Cancel</button>
+                <button class="btn btn-success" onclick="saveProduct()" id="save-btn">💾 Save</button>
+                <button class="btn btn-danger" onclick="document.getElementById('product-form').classList.remove('show')">❌ Cancel</button>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th id="th-barcode">Barcode</th>
-                        <th id="th-name">Name</th>
-                        <th id="th-category">Category</th>
-                        <th id="th-price">Price</th>
-                        <th id="th-qty">Qty</th>
-                        <th id="th-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="product-list"></tbody>
-            </table>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="th-barcode">Barcode</th>
+                            <th id="th-name">Name</th>
+                            <th id="th-category">Category</th>
+                            <th id="th-price">Price</th>
+                            <th id="th-qty">Qty</th>
+                            <th id="th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-list"></tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- ===== SALES ===== -->
+        <!-- ===== SALES TAB ===== -->
         <div id="sales" class="page">
             <h2 id="sales-title">💰 Sales</h2>
             <p id="scan-label">Scan or enter barcode:</p>
             <input type="text" id="scan-barcode" placeholder="Enter barcode" style="width:300px; padding:10px; font-size:18px;">
-            <button onclick="addToCart()" id="add-cart-btn">➕ Add to Cart</button>
+            <button class="btn btn-success" onclick="addToCart()" id="add-cart-btn">➕ Add to Cart</button>
             <br>
             <input type="text" id="customer-name" placeholder="Customer Name (Optional)" style="width:300px; margin-top:10px;">
 
             <div style="margin-top:20px;">
                 <h3 id="cart-title">🛒 Cart</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th id="cart-th-barcode">Barcode</th>
-                            <th id="cart-th-name">Name</th>
-                            <th id="cart-th-price">Price</th>
-                            <th id="cart-th-qty">Qty</th>
-                            <th id="cart-th-total">Total</th>
-                            <th id="cart-th-action">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cart-items"></tbody>
-                </table>
-                <div style="margin-top:15px;">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th id="cart-th-barcode">Barcode</th>
+                                <th id="cart-th-name">Name</th>
+                                <th id="cart-th-price">Price</th>
+                                <th id="cart-th-qty">Qty</th>
+                                <th id="cart-th-total">Total</th>
+                                <th id="cart-th-action">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-items"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:10px;">
                     <strong id="total-label">Total: </strong>
                     <span class="cart-total" id="cart-total">0</span>
                     <br>
@@ -147,146 +552,139 @@
                         <option value="transfer" id="payment-transfer">Transfer</option>
                     </select>
                     <br>
-                    <button onclick="checkout()" id="checkout-btn" class="btn-success">✅ Checkout</button>
-                    <button onclick="clearCart()" class="btn-danger" id="clear-cart-btn">🗑️ Clear Cart</button>
+                    <button class="btn btn-success" onclick="checkout()" id="checkout-btn">✅ Checkout</button>
+                    <button class="btn btn-danger" onclick="clearCart()" id="clear-cart-btn">🗑️ Clear Cart</button>
                 </div>
             </div>
         </div>
 
-        <!-- ===== REPORTS ===== -->
+        <!-- ===== REPORTS TAB ===== -->
         <div id="reports" class="page">
             <h2 id="reports-title">📈 Reports</h2>
             
-            <div style="margin:15px 0;">
-                <button onclick="loadReport('daily')" class="btn-warning" id="report-daily">📅 Daily</button>
-                <button onclick="loadReport('weekly')" class="btn-warning" id="report-weekly">📅 Weekly</button>
-                <button onclick="loadReport('monthly')" class="btn-warning" id="report-monthly">📅 Monthly</button>
-                <button onclick="loadReport('yearly')" class="btn-warning" id="report-yearly">📅 Yearly</button>
+            <div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-warning" onclick="loadReport('daily')" id="report-daily">📅 Daily</button>
+                <button class="btn btn-warning" onclick="loadReport('weekly')" id="report-weekly">📅 Weekly</button>
+                <button class="btn btn-warning" onclick="loadReport('monthly')" id="report-monthly">📅 Monthly</button>
+                <button class="btn btn-warning" onclick="loadReport('yearly')" id="report-yearly">📅 Yearly</button>
             </div>
 
-            <!-- Export Buttons -->
             <div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
-                <button onclick="exportReport('excel')" class="btn-success" id="export-excel">📊 Export Excel</button>
-                <button onclick="exportReport('pdf')" class="btn-danger" id="export-pdf">📄 Export PDF</button>
-                <button onclick="exportReport('csv')" class="btn-warning" id="export-csv">📋 Export CSV</button>
+                <button class="btn btn-success" onclick="exportReport('excel')" id="export-excel">📊 Export Excel</button>
+                <button class="btn btn-danger" onclick="exportReport('pdf')" id="export-pdf">📄 Export PDF</button>
+                <button class="btn btn-warning" onclick="exportReport('csv')" id="export-csv">📋 Export CSV</button>
             </div>
 
             <div id="report-content">
-                <div class="report-summary" id="report-summary">
-                    <div class="report-card">
-                        <div class="value" id="report-total-sales">0</div>
-                        <div class="label" id="report-label-sales">Total Sales</div>
+                <div class="stats-grid" id="report-summary">
+                    <div class="stat-card">
+                        <h3 id="report-label-sales">Total Sales</h3>
+                        <p id="report-total-sales">0</p>
                     </div>
-                    <div class="report-card">
-                        <div class="value" id="report-total-revenue">0</div>
-                        <div class="label" id="report-label-revenue">Total Revenue</div>
+                    <div class="stat-card">
+                        <h3 id="report-label-revenue">Total Revenue</h3>
+                        <p id="report-total-revenue">0</p>
                     </div>
-                    <div class="report-card">
-                        <div class="value" id="report-total-profit">0</div>
-                        <div class="label" id="report-label-profit">Total Profit</div>
+                    <div class="stat-card">
+                        <h3 id="report-label-profit">Total Profit</h3>
+                        <p id="report-total-profit">0</p>
                     </div>
-                    <div class="report-card">
-                        <div class="value" id="report-avg-sale">0</div>
-                        <div class="label" id="report-label-avg">Average Sale</div>
+                    <div class="stat-card">
+                        <h3 id="report-label-avg">Average Sale</h3>
+                        <p id="report-avg-sale">0</p>
                     </div>
                 </div>
 
                 <h3 id="report-chart-title">📊 Sales Chart</h3>
-                <div class="chart-container" id="chart-container">
-                    <div class="chart-bar" id="chart-bar"></div>
+                <div id="chart-container" style="background:#fafafa; padding:20px; border-radius:10px; border:1px solid #e0e0e0; min-height:150px;">
+                    <div id="chart-bar" style="display:flex; align-items:flex-end; gap:10px; height:150px;"></div>
                 </div>
 
                 <h3 id="report-top-title">🏆 Top Selling Products</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th id="report-top-product">Product</th>
-                            <th id="report-top-qty">Qty Sold</th>
-                            <th id="report-top-revenue">Revenue</th>
-                            <th id="report-top-orders">Orders</th>
-                        </tr>
-                    </thead>
-                    <tbody id="top-products-list"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th id="report-top-product">Product</th>
+                                <th id="report-top-qty">Qty Sold</th>
+                                <th id="report-top-revenue">Revenue</th>
+                                <th id="report-top-orders">Orders</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-products-list"></tbody>
+                    </table>
+                </div>
 
                 <h3 id="report-low-title">⚠️ Low Stock Alert</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th id="report-low-barcode">Barcode</th>
-                            <th id="report-low-product">Product</th>
-                            <th id="report-low-category">Category</th>
-                            <th id="report-low-stock">Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody id="low-stock-list"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th id="report-low-barcode">Barcode</th>
+                                <th id="report-low-product">Product</th>
+                                <th id="report-low-category">Category</th>
+                                <th id="report-low-stock">Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="low-stock-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- ===== SETTINGS ===== -->
+        <!-- ===== SETTINGS TAB ===== -->
         <div id="settings" class="page">
             <h2 id="settings-title">⚙️ Settings</h2>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-
-                <!-- Full Window Mode -->
+            <div class="settings-grid">
                 <div class="settings-card">
                     <h3 id="settings-fullscreen">🖥️ Full Window Mode</h3>
-                    <button onclick="toggleFullscreen()" class="btn-success" id="fullscreen-btn">⛶ Toggle Full Screen</button>
+                    <button class="btn btn-success" onclick="toggleFullscreen()" id="fullscreen-btn">⛶ Toggle Full Screen</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="fullscreen-status">Current: Off</p>
                 </div>
 
-                <!-- Tab View -->
                 <div class="settings-card">
                     <h3 id="settings-tabview">📑 Tab View</h3>
-                    <button onclick="toggleTabView()" class="btn-warning" id="tabview-btn">🔀 Switch View</button>
+                    <button class="btn btn-warning" onclick="toggleTabView()" id="tabview-btn">🔀 Switch View</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="tabview-status">Current: Classic</p>
                 </div>
 
-                <!-- Font Selection -->
                 <div class="settings-card">
                     <h3 id="settings-font">🔤 Font Selection</h3>
                     <select id="font-select" style="width:100%; padding:10px;">
+                        <option value="Segoe UI">Segoe UI</option>
                         <option value="Arial">Arial</option>
-                        <option value="Arial Black">Arial Black</option>
                         <option value="Verdana">Verdana</option>
                         <option value="Tahoma">Tahoma</option>
-                        <option value="Times New Roman">Times New Roman</option>
                         <option value="Georgia">Georgia</option>
-                        <option value="Comic Sans MS">Comic Sans MS</option>
-                        <option value="Courier New">Courier New</option>
-                        <option value="Segoe UI">Segoe UI</option>
                     </select>
                     <br>
                     <label style="margin-top:10px; display:block;">Font Size:</label>
                     <input type="range" id="font-size-slider" min="12" max="24" value="14" style="width:100%;">
                     <span id="font-size-label">14px</span>
                     <br>
-                    <button onclick="applyFontSettings()" class="btn-success" style="margin-top:10px;">✅ Apply Font</button>
+                    <button class="btn btn-success" onclick="applyFontSettings()" style="margin-top:10px;">✅ Apply Font</button>
                 </div>
 
-                <!-- Background Image -->
                 <div class="settings-card">
                     <h3 id="settings-bg">🖼️ Background Image</h3>
-                    <input type="file" id="bg-image-upload" accept="image/*" style="width:100%; padding:5px;">
+                    <input type="file" id="bg-image-upload" accept="image/*">
                     <br>
                     <label style="margin-top:10px; display:block;">Transparency (Max 50%):</label>
-                    <input type="range" id="bg-transparency" min="0" max="50" value="0" style="width:100%;">
+                    <input type="range" id="bg-transparency" min="0" max="50" value="0">
                     <span id="bg-transparency-label">0%</span>
                     <br>
-                    <button onclick="applyBackgroundSettings()" class="btn-success" style="margin-top:10px;">✅ Apply Background</button>
-                    <button onclick="resetBackgroundImage()" class="btn-danger" style="margin-top:5px;">🔄 Reset to Default</button>
+                    <button class="btn btn-success" onclick="applyBackgroundSettings()" style="margin-top:10px;">✅ Apply Background</button>
+                    <button class="btn btn-danger" onclick="resetBackgroundImage()" style="margin-top:5px;">🔄 Reset to Default</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="bg-status">Current: Default</p>
                 </div>
-
             </div>
         </div>
 
-        <!-- ===== EMPLOYEES (Admin Only) ===== -->
+        <!-- ===== EMPLOYEES TAB (Admin Only) ===== -->
         <div id="employees" class="page">
             <h2 id="emp-title">👥 Employee Management</h2>
-            <div class="admin-panel">
+            <div style="background:#fff3e0; border:1px solid #ffcc80; border-radius:10px; padding:20px; margin-bottom:20px;">
                 <h3 id="emp-add-title">➕ Add New Employee</h3>
                 <div class="form-row">
                     <div><label id="emp-label-id">Employee ID:</label><input type="text" id="emp-id" placeholder="EMP001"></div>
@@ -299,22 +697,24 @@
                         </select>
                     </div>
                 </div>
-                <button onclick="addEmployee()" class="btn-success" id="emp-add-btn">➕ Add Employee</button>
+                <button class="btn btn-success" onclick="addEmployee()" id="emp-add-btn">➕ Add Employee</button>
             </div>
 
             <h3 id="emp-existing-title">👤 Existing Employees</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th id="emp-th-id">Employee ID</th>
-                        <th id="emp-th-name">Name</th>
-                        <th id="emp-th-role">Role</th>
-                        <th id="emp-th-status">Status</th>
-                        <th id="emp-th-actions">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="employee-list"></tbody>
-            </table>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="emp-th-id">Employee ID</th>
+                            <th id="emp-th-name">Name</th>
+                            <th id="emp-th-role">Role</th>
+                            <th id="emp-th-status">Status</th>
+                            <th id="emp-th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-list"></tbody>
+                </table>
+            </div>
         </div>
 
     </div>
@@ -322,34 +722,25 @@
     <!-- ===== FOOTER ===== -->
     <footer>
         <div class="footer-content">
-            <div class="footer-shop-name">
-                <span id="footer-shop-en">🏪 EcoShop</span>
-                <span id="footer-shop-ru" style="display:none;">🏪 ЭкоShop</span>
-                <span class="footer-year">@ 2026</span>
-            </div>
-            <div class="footer-developer">
-                <span id="footer-dev-en">Developed by <strong>ZUBAIR</strong></span>
-                <span id="footer-dev-ru" style="display:none;">Разработано <strong>ZUBAIR</strong></span>
-            </div>
+            <div class="footer-shop">🏪 <span id="footer-shop-name">EcoShop</span> @ 2026</div>
+            <div class="footer-dev">Developed by <strong>ZUBAIR</strong></div>
             <div class="footer-contact">
-                <span class="footer-phone">📞 WhatsApp/Mobile: <strong>+996 990 115 990</strong></span>
-                <span class="footer-email">📧 Email: <strong>skzubair151@gmail.com</strong></span>
+                📞 WhatsApp/Mobile: <strong>+996 990 115 990</strong> &nbsp;|&nbsp; 📧 Email: <strong>skzubair151@gmail.com</strong>
             </div>
         </div>
     </footer>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         // ========== TRANSLATIONS ==========
         const translations = {
             en: {
+                shop_name: 'EcoShop',
                 dashboard: 'Dashboard',
                 products: 'Products',
                 sales: 'Sales',
                 reports: 'Reports',
                 settings: 'Settings',
                 employees: 'Employees',
-                logout: 'Logout',
                 total_products: 'Total Products',
                 total_sales: 'Total Sales',
                 today_sales: "Today's Sales",
@@ -366,13 +757,6 @@
                 qty: 'Qty',
                 select_category: 'Select Category',
                 no_products: 'No products found',
-                label_barcode: 'Barcode:',
-                label_category: 'Category:',
-                label_name_ru: 'Name (Russian):',
-                label_name_en: 'Name (English):',
-                label_price: 'Price:',
-                label_cost: 'Cost:',
-                label_quantity: 'Quantity:',
                 scan_barcode: 'Scan or enter barcode:',
                 add_to_cart: 'Add to Cart',
                 cart: 'Cart',
@@ -448,18 +832,24 @@
                 invalid_password: '❌ Invalid Password!',
                 delete_success: '✅ Deleted Successfully!',
                 delete_failed: '❌ Deletion Failed!',
-                apply_font: '✅ Apply Font',
-                apply_background: '✅ Apply Background',
-                transparency: 'Transparency (Max 50%):'
+                label_barcode: 'Barcode:',
+                label_category: 'Category:',
+                label_name_ru: 'Name (Russian):',
+                label_name_en: 'Name (English):',
+                label_price: 'Price:',
+                label_cost: 'Cost:',
+                label_quantity: 'Quantity:',
+                footer_shop: 'EcoShop',
+                dev_by: 'Developed by ZUBAIR'
             },
             ru: {
+                shop_name: 'ЭкоShop',
                 dashboard: 'Панель',
                 products: 'Товары',
                 sales: 'Продажи',
                 reports: 'Отчеты',
                 settings: 'Настройки',
                 employees: 'Сотрудники',
-                logout: 'Выйти',
                 total_products: 'Всего товаров',
                 total_sales: 'Всего продаж',
                 today_sales: 'Продажи сегодня',
@@ -476,13 +866,6 @@
                 qty: 'Кол-во',
                 select_category: 'Выберите категорию',
                 no_products: 'Товары не найдены',
-                label_barcode: 'Штрих-код:',
-                label_category: 'Категория:',
-                label_name_ru: 'Название (Русский):',
-                label_name_en: 'Название (Английский):',
-                label_price: 'Цена:',
-                label_cost: 'Себестоимость:',
-                label_quantity: 'Количество:',
                 scan_barcode: 'Введите штрих-код:',
                 add_to_cart: 'Добавить',
                 cart: 'Корзина',
@@ -558,9 +941,15 @@
                 invalid_password: '❌ Неверный пароль!',
                 delete_success: '✅ Успешно удалено!',
                 delete_failed: '❌ Ошибка удаления!',
-                apply_font: '✅ Применить шрифт',
-                apply_background: '✅ Применить фон',
-                transparency: 'Прозрачность (Макс 50%):'
+                label_barcode: 'Штрих-код:',
+                label_category: 'Категория:',
+                label_name_ru: 'Название (Русский):',
+                label_name_en: 'Название (Английский):',
+                label_price: 'Цена:',
+                label_cost: 'Себестоимость:',
+                label_quantity: 'Количество:',
+                footer_shop: 'ЭкоShop',
+                dev_by: 'Разработано ЗУБАИРОМ'
             }
         };
 
@@ -577,50 +966,23 @@
         function setLanguage(lang) {
             currentLang = lang;
             
-            document.getElementById('lang-en').classList.toggle('lang-active', lang === 'en');
-            document.getElementById('lang-ru').classList.toggle('lang-active', lang === 'ru');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('lang-ru').classList.toggle('active', lang === 'ru');
             
-            if (lang === 'ru') {
-                document.getElementById('shop-name-en').style.display = 'none';
-                document.getElementById('shop-name-ru').style.display = 'inline';
-                document.getElementById('dev-en').style.display = 'none';
-                document.getElementById('dev-ru').style.display = 'inline';
-                document.getElementById('footer-shop-en').style.display = 'none';
-                document.getElementById('footer-shop-ru').style.display = 'inline';
-                document.getElementById('footer-dev-en').style.display = 'none';
-                document.getElementById('footer-dev-ru').style.display = 'inline';
-            } else {
-                document.getElementById('shop-name-en').style.display = 'inline';
-                document.getElementById('shop-name-ru').style.display = 'none';
-                document.getElementById('dev-en').style.display = 'inline';
-                document.getElementById('dev-ru').style.display = 'none';
-                document.getElementById('footer-shop-en').style.display = 'inline';
-                document.getElementById('footer-shop-ru').style.display = 'none';
-                document.getElementById('footer-dev-en').style.display = 'inline';
-                document.getElementById('footer-dev-ru').style.display = 'none';
-            }
+            const t = translations[lang];
             
-            updateAllText();
-            loadDashboard();
-            loadProducts();
-            loadCategories();
+            // Update shop name
+            document.getElementById('shop-name').textContent = t.shop_name;
+            document.getElementById('footer-shop-name').textContent = t.footer_shop;
             
-            if (document.getElementById('reports').classList.contains('active')) {
-                loadReport(currentReportPeriod);
-            }
-        }
-
-        function updateAllText() {
-            const t = translations[currentLang];
-            
-            document.getElementById('logout-btn').textContent = '🚪 ' + t.logout;
-            document.getElementById('nav-dashboard-text').textContent = t.dashboard;
-            document.getElementById('nav-products-text').textContent = t.products;
-            document.getElementById('nav-sales-text').textContent = t.sales;
-            document.getElementById('nav-reports-text').textContent = t.reports;
-            document.getElementById('nav-settings-text').textContent = t.settings;
-            if (document.getElementById('nav-employees-text')) {
-                document.getElementById('nav-employees-text').textContent = t.employees;
+            // Update all text
+            document.getElementById('tab-dashboard').textContent = t.dashboard;
+            document.getElementById('tab-products').textContent = t.products;
+            document.getElementById('tab-sales').textContent = t.sales;
+            document.getElementById('tab-reports').textContent = t.reports;
+            document.getElementById('tab-settings').textContent = t.settings;
+            if (document.getElementById('tab-employees')) {
+                document.getElementById('tab-employees').textContent = t.employees;
             }
             
             document.getElementById('dash-title').textContent = '📊 ' + t.dashboard;
@@ -631,7 +993,7 @@
             document.getElementById('cat-stats-title').textContent = t.categories_title;
             
             document.getElementById('prod-title').textContent = '📦 ' + t.products;
-            document.getElementById('add-product-btn').textContent = '➕ ' + t.add_product;
+            document.getElementById('add-product-btn').textContent = t.add_product;
             document.getElementById('form-title').textContent = t.add_product;
             document.getElementById('label-barcode').textContent = t.label_barcode;
             document.getElementById('label-category').textContent = t.label_category;
@@ -640,9 +1002,7 @@
             document.getElementById('label-price').textContent = t.label_price;
             document.getElementById('label-cost').textContent = t.label_cost;
             document.getElementById('label-quantity').textContent = t.label_quantity;
-            document.getElementById('save-btn').textContent = '💾 ' + t.save;
-            document.getElementById('cancel-btn').textContent = '❌ ' + t.cancel;
-            
+            document.getElementById('save-btn').innerHTML = '💾 ' + t.save;
             document.getElementById('th-barcode').textContent = t.barcode;
             document.getElementById('th-name').textContent = t.name;
             document.getElementById('th-category').textContent = t.category;
@@ -652,19 +1012,17 @@
             
             document.getElementById('sales-title').textContent = '💰 ' + t.sales;
             document.getElementById('scan-label').textContent = t.scan_barcode;
-            document.getElementById('add-cart-btn').textContent = '➕ ' + t.add_to_cart;
+            document.getElementById('add-cart-btn').innerHTML = '➕ ' + t.add_to_cart;
             document.getElementById('cart-title').textContent = '🛒 ' + t.cart;
             document.getElementById('total-label').textContent = t.total + ': ';
-            document.getElementById('checkout-btn').textContent = '✅ ' + t.checkout;
-            document.getElementById('clear-cart-btn').textContent = '🗑️ ' + t.clear_cart;
-            
+            document.getElementById('checkout-btn').innerHTML = '✅ ' + t.checkout;
+            document.getElementById('clear-cart-btn').innerHTML = '🗑️ ' + t.clear_cart;
             document.getElementById('cart-th-barcode').textContent = t.barcode;
             document.getElementById('cart-th-name').textContent = t.name;
             document.getElementById('cart-th-price').textContent = t.price;
             document.getElementById('cart-th-qty').textContent = t.qty;
             document.getElementById('cart-th-total').textContent = t.total;
             document.getElementById('cart-th-action').textContent = t.actions;
-            
             document.getElementById('payment-label').textContent = t.payment_method;
             document.getElementById('payment-cash').textContent = t.payment_cash;
             document.getElementById('payment-card').textContent = t.payment_card;
@@ -673,14 +1031,13 @@
             document.getElementById('cart-discount').placeholder = t.discount;
             
             document.getElementById('reports-title').textContent = t.reports_title;
-            document.getElementById('report-daily').textContent = '📅 ' + t.daily;
-            document.getElementById('report-weekly').textContent = '📅 ' + t.weekly;
-            document.getElementById('report-monthly').textContent = '📅 ' + t.monthly;
-            document.getElementById('report-yearly').textContent = '📅 ' + t.yearly;
-            document.getElementById('export-excel').textContent = t.export_excel;
-            document.getElementById('export-pdf').textContent = t.export_pdf;
-            document.getElementById('export-csv').textContent = t.export_csv;
-            
+            document.getElementById('report-daily').innerHTML = '📅 ' + t.daily;
+            document.getElementById('report-weekly').innerHTML = '📅 ' + t.weekly;
+            document.getElementById('report-monthly').innerHTML = '📅 ' + t.monthly;
+            document.getElementById('report-yearly').innerHTML = '📅 ' + t.yearly;
+            document.getElementById('export-excel').innerHTML = t.export_excel;
+            document.getElementById('export-pdf').innerHTML = t.export_pdf;
+            document.getElementById('export-csv').innerHTML = t.export_csv;
             document.getElementById('report-label-sales').textContent = t.total_sales_report;
             document.getElementById('report-label-revenue').textContent = t.total_revenue;
             document.getElementById('report-label-profit').textContent = t.total_profit;
@@ -702,8 +1059,8 @@
             document.getElementById('settings-tabview').textContent = t.settings_tabview;
             document.getElementById('settings-font').textContent = t.settings_font;
             document.getElementById('settings-bg').textContent = t.settings_bg;
-            document.getElementById('fullscreen-btn').textContent = t.toggle_fullscreen;
-            document.getElementById('tabview-btn').textContent = t.switch_view;
+            document.getElementById('fullscreen-btn').innerHTML = t.toggle_fullscreen;
+            document.getElementById('tabview-btn').innerHTML = t.switch_view;
             
             if (currentUserRole === 'Admin') {
                 document.getElementById('emp-title').textContent = t.employee_management;
@@ -715,7 +1072,7 @@
                 document.getElementById('emp-label-role').textContent = t.emp_role;
                 document.getElementById('emp-role-staff').textContent = t.emp_staff;
                 document.getElementById('emp-role-admin').textContent = t.emp_admin;
-                document.getElementById('emp-add-btn').textContent = '➕ ' + t.emp_add;
+                document.getElementById('emp-add-btn').innerHTML = '➕ ' + t.emp_add;
                 document.getElementById('emp-th-id').textContent = t.emp_th_id;
                 document.getElementById('emp-th-name').textContent = t.emp_th_name;
                 document.getElementById('emp-th-role').textContent = t.emp_th_role;
@@ -727,29 +1084,25 @@
             if (cart.length > 0) renderCart();
         }
 
-        // ========== PAGE NAVIGATION ==========
-        function showPage(page) {
+        // ========== TAB NAVIGATION ==========
+        function showTab(tab) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById(page).classList.add('active');
+            document.getElementById(tab).classList.add('active');
             
-            const navMap = {
-                'dashboard': 'nav-dashboard',
-                'products': 'nav-products',
-                'sales': 'nav-sales',
-                'reports': 'nav-reports',
-                'settings': 'nav-settings',
-                'employees': 'nav-employees'
+            const tabMap = {
+                'dashboard': 0, 'products': 1, 'sales': 2, 'reports': 3, 'settings': 4, 'employees': 5
             };
-            if (navMap[page]) {
-                document.getElementById(navMap[page]).classList.add('active');
+            const index = tabMap[tab];
+            if (index !== undefined) {
+                document.querySelectorAll('nav button')[index].classList.add('active');
             }
             
-            if (page === 'dashboard') loadDashboard();
-            if (page === 'products') { loadCategories(); loadProducts(); }
-            if (page === 'sales') { loadCategories(); }
-            if (page === 'reports') loadReport('daily');
-            if (page === 'employees') loadEmployees();
+            if (tab === 'dashboard') loadDashboard();
+            if (tab === 'products') { loadCategories(); loadProducts(); }
+            if (tab === 'sales') loadCategories();
+            if (tab === 'reports') loadReport('daily');
+            if (tab === 'employees') loadEmployees();
         }
 
         // ========== DASHBOARD ==========
@@ -826,8 +1179,8 @@
                             <td>${p.price}</td>
                             <td>${p.quantity}</td>
                             <td>
-                                <button onclick="editProduct(${p.id})">✏️</button>
-                                <button onclick="deleteProduct(${p.id})" class="btn-danger">🗑️</button>
+                                <button class="btn btn-primary btn-sm" onclick="editProduct(${p.id})">✏️</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">🗑️</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -836,7 +1189,7 @@
         }
 
         function showAddProduct() {
-            document.getElementById('product-form').style.display = 'block';
+            document.getElementById('product-form').classList.add('show');
             document.getElementById('form-title').textContent = translations[currentLang].add_product;
             ['p-barcode', 'p-name-ru', 'p-name-en', 'p-price', 'p-cost', 'p-quantity'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('p-category').value = '';
@@ -869,7 +1222,7 @@
             .then(result => {
                 if (result.status === 'success') {
                     alert('✅ ' + result.message);
-                    document.getElementById('product-form').style.display = 'none';
+                    document.getElementById('product-form').classList.remove('show');
                     loadProducts();
                     loadDashboard();
                 } else {
@@ -881,7 +1234,7 @@
         function editProduct(id) {
             const p = allProducts.find(x => x.id === id);
             if (!p) return;
-            document.getElementById('product-form').style.display = 'block';
+            document.getElementById('product-form').classList.add('show');
             document.getElementById('form-title').textContent = '✏️ ' + translations[currentLang].add_product;
             document.getElementById('p-barcode').value = p.barcode || '';
             document.getElementById('p-name-ru').value = p.name_ru || '';
@@ -934,7 +1287,6 @@
             
             if (type === 'product') url = `/api/products/${id}`;
             else if (type === 'employee') url = `/api/employees/${id}`;
-            else if (type === 'category') url = `/api/categories/${id}`;
             else return;
 
             fetch(url, { method: 'DELETE' })
@@ -944,7 +1296,6 @@
                         alert('✅ ' + t.delete_success);
                         if (type === 'product') { loadProducts(); loadDashboard(); }
                         else if (type === 'employee') loadEmployees();
-                        else if (type === 'category') { loadCategories(); loadProducts(); loadDashboard(); }
                     } else {
                         alert('❌ ' + (result.message || t.delete_failed));
                     }
@@ -1002,12 +1353,12 @@
                     <td>${item.name}</td>
                     <td>${item.price}</td>
                     <td>
-                        <button onclick="changeQty(${index}, -1)">-</button>
+                        <button class="btn btn-warning btn-sm" onclick="changeQty(${index}, -1)">-</button>
                         ${item.quantity}
-                        <button onclick="changeQty(${index}, 1)">+</button>
+                        <button class="btn btn-warning btn-sm" onclick="changeQty(${index}, 1)">+</button>
                     </td>
                     <td>${subtotal.toFixed(2)}</td>
-                    <td><button onclick="removeFromCart(${index})" class="btn-danger">🗑️</button></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeFromCart(${index})">🗑️</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1081,11 +1432,10 @@
             fetch(`/api/reports/sales?period=${period}`)
                 .then(res => res.json())
                 .then(data => {
-                    let totalSales = 0, totalRevenue = 0, totalDiscount = 0, avgSale = 0;
+                    let totalSales = 0, totalRevenue = 0, avgSale = 0;
                     data.forEach(d => {
                         totalSales += d.total_sales || 0;
                         totalRevenue += d.total_revenue || 0;
-                        totalDiscount += d.total_discount || 0;
                     });
                     if (data.length > 0) avgSale = totalRevenue / data.length;
                     document.getElementById('report-total-sales').textContent = totalSales;
@@ -1097,16 +1447,14 @@
                     const maxVal = Math.max(...data.map(d => d.total_revenue || 0), 1);
                     data.slice(0, 14).forEach(d => {
                         const wrapper = document.createElement('div');
-                        wrapper.className = 'bar-wrapper';
+                        wrapper.style.cssText = 'flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;';
                         const bar = document.createElement('div');
-                        bar.className = 'bar';
-                        const height = ((d.total_revenue || 0) / maxVal) * 100;
-                        bar.style.height = Math.max(height, 5) + '%';
+                        bar.style.cssText = `width:100%; min-width:20px; max-width:40px; background:#1a73e8; border-radius:4px 4px 0 0; height:${((d.total_revenue || 0) / maxVal) * 100}%; min-height:5px;`;
                         const label = document.createElement('div');
-                        label.className = 'bar-label';
+                        label.style.cssText = 'font-size:10px; color:#888; margin-top:5px;';
                         label.textContent = d.date || '';
                         const value = document.createElement('div');
-                        value.className = 'bar-value';
+                        value.style.cssText = 'font-size:10px; color:#333; font-weight:bold;';
                         value.textContent = (d.total_revenue || 0).toFixed(0);
                         wrapper.appendChild(bar);
                         wrapper.appendChild(value);
@@ -1164,7 +1512,6 @@
                 });
         }
 
-        // ========== EXPORT REPORTS ==========
         function exportReport(format) {
             const period = currentReportPeriod;
             
@@ -1178,7 +1525,6 @@
                 .then(data => {
                     if (format === 'pdf') {
                         if (data.status === 'success') {
-                            // For PDF, create a simple text report
                             let text = 'Sales Report\n';
                             text += '='.repeat(50) + '\n';
                             text += `Period: ${period}\n`;
@@ -1218,8 +1564,7 @@
                 .catch(err => alert('❌ Export error: ' + err.message));
         }
 
-        // ========== SETTINGS FUNCTIONS ==========
-
+        // ========== SETTINGS ==========
         let isFullscreen = false;
         let isTabView = false;
         let currentTransparency = 0;
@@ -1264,10 +1609,8 @@
             document.body.style.fontSize = size + 'px';
             document.getElementById('font-size-label').textContent = size + 'px';
             
-            // Save to localStorage
             localStorage.setItem('ecoshop_font', font);
             localStorage.setItem('ecoshop_fontsize', size);
-            
             alert('✅ Font settings applied!');
         }
 
@@ -1275,7 +1618,6 @@
             const fileInput = document.getElementById('bg-image-upload');
             const transparency = parseInt(document.getElementById('bg-transparency').value);
             
-            // Apply transparency
             currentTransparency = transparency;
             document.getElementById('bg-transparency-label').textContent = transparency + '%';
             
@@ -1301,28 +1643,19 @@
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundAttachment = 'fixed';
                 
-                // Apply transparency overlay (max 50% = 0.5)
                 const overlay = document.getElementById('bg-overlay');
                 if (!overlay) {
                     const div = document.createElement('div');
                     div.id = 'bg-overlay';
-                    div.style.position = 'fixed';
-                    div.style.top = '0';
-                    div.style.left = '0';
-                    div.style.width = '100%';
-                    div.style.height = '100%';
-                    div.style.zIndex = '-1';
-                    div.style.pointerEvents = 'none';
+                    div.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;';
                     document.body.prepend(div);
                 }
                 document.getElementById('bg-overlay').style.background = `rgba(255, 255, 255, ${transparency})`;
                 
                 document.getElementById('bg-status').textContent = 'Current: Custom Image (' + currentTransparency + '% transparency)';
                 
-                // Save to localStorage
                 localStorage.setItem('ecoshop_bg', currentBgImage);
                 localStorage.setItem('ecoshop_transparency', currentTransparency);
-                
                 alert('✅ Background applied with ' + currentTransparency + '% transparency!');
             }
         }
@@ -1347,13 +1680,10 @@
             
             localStorage.removeItem('ecoshop_bg');
             localStorage.removeItem('ecoshop_transparency');
-            
             alert('✅ Background reset to default!');
         }
 
-        // ========== LOAD SETTINGS FROM LOCALSTORAGE ==========
         function loadSettings() {
-            // Load font
             const savedFont = localStorage.getItem('ecoshop_font');
             const savedSize = localStorage.getItem('ecoshop_fontsize');
             if (savedFont) {
@@ -1366,7 +1696,6 @@
                 document.getElementById('font-size-label').textContent = savedSize + 'px';
             }
             
-            // Load background
             const savedBg = localStorage.getItem('ecoshop_bg');
             const savedTrans = localStorage.getItem('ecoshop_transparency');
             if (savedBg) {
@@ -1397,10 +1726,8 @@
                                 <td><span class="badge" style="background:${emp.role === 'Admin' ? '#ff9800' : '#2196f3'}; color:white;">${emp.role}</span></td>
                                 <td><span class="badge" style="background:${statusColor}; color:white;">${statusText}</span></td>
                                 <td>
-                                    <button onclick="toggleEmployeeStatus(${emp.id}, '${emp.status}')" class="btn-warning" style="padding:5px 10px;">
-                                        ${actionText}
-                                    </button>
-                                    <button onclick="deleteEmployee(${emp.id})" class="btn-danger" style="padding:5px 10px;">🗑️</button>
+                                    <button class="btn btn-warning btn-sm" onclick="toggleEmployeeStatus(${emp.id}, '${emp.status}')">${actionText}</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})">🗑️</button>
                                 </td>
                             </tr>
                         `;
@@ -1479,18 +1806,19 @@
                 }
             });
 
-            // Update transparency label in real-time
             document.getElementById('bg-transparency').addEventListener('input', function() {
                 document.getElementById('bg-transparency-label').textContent = this.value + '%';
             });
 
-            // Update font size label in real-time
             document.getElementById('font-size-slider').addEventListener('input', function() {
                 document.getElementById('font-size-label').textContent = this.value + 'px';
             });
 
             setLanguage('en');
             loadSettings();
+            loadDashboard();
+            loadCategories();
+            loadProducts();
         });
     </script>
 
