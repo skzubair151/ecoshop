@@ -21,6 +21,7 @@ def get_db():
 # ========== CREATE DATABASE AND TABLES ==========
 def create_database():
     """Create all tables and insert default data"""
+    print("🔄 Creating database...")
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     
@@ -198,39 +199,43 @@ def create_database():
     conn.commit()
     conn.close()
     
+    # Verify data was inserted
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM products')
+    prod_count = cursor.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) FROM categories')
+    cat_count = cursor.fetchone()[0]
+    conn.close()
+    
     print("=" * 50)
     print("✅ ECOSHOP DATABASE CREATED!")
     print("=" * 50)
+    print(f"📂 Categories: {cat_count}")
+    print(f"📦 Products: {prod_count}")
+    print("=" * 50)
     print("🔐 Admin: ADMIN001 / admin123")
     print("👤 Staff: EMP001 / staff123")
-    print("📦 Products: 60")
-    print("📂 Categories: 12")
     print("=" * 50)
 
 # ========== ENSURE DATABASE EXISTS ==========
 def ensure_database():
     if not os.path.exists(DB_NAME):
-        print("🔄 Creating database...")
         create_database()
     else:
-        # Check if tables exist
+        # Check if tables have data
         try:
             conn = get_db()
             cursor = conn.cursor()
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
-            if not cursor.fetchone():
-                conn.close()
+            cursor.execute("SELECT COUNT(*) FROM products")
+            count = cursor.fetchone()[0]
+            conn.close()
+            if count == 0:
+                print("🔄 Products table empty, recreating...")
                 os.remove(DB_NAME)
                 create_database()
             else:
-                cursor.execute("SELECT COUNT(*) FROM employees")
-                count = cursor.fetchone()[0]
-                conn.close()
-                if count == 0:
-                    os.remove(DB_NAME)
-                    create_database()
-                else:
-                    print("✅ Database already exists and is valid.")
+                print(f"✅ Database ready! {count} products found.")
         except:
             if os.path.exists(DB_NAME):
                 os.remove(DB_NAME)
