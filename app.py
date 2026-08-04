@@ -1,192 +1,47 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
+import csv
+import io
 
 app = Flask(__name__)
 app.secret_key = 'ecoshop_secret_key_2026'
 
-# ========== DATABASE SETUP ==========
 DB_NAME = 'ecoshop.db'
 
 def init_db():
     """Initialize database with all data"""
-    print("🔄 Creating database...")
-    
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    
-    # Drop existing tables if they exist (fresh start)
-    c.execute('DROP TABLE IF EXISTS sale_items')
-    c.execute('DROP TABLE IF EXISTS sales')
-    c.execute('DROP TABLE IF EXISTS products')
-    c.execute('DROP TABLE IF EXISTS categories')
-    c.execute('DROP TABLE IF EXISTS employees')
-    
-    # Create tables
-    c.execute('''
-        CREATE TABLE categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name_ru TEXT, name_en TEXT, icon TEXT, color TEXT
-        )
-    ''')
-    
-    c.execute('''
-        CREATE TABLE products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            barcode TEXT UNIQUE, name_ru TEXT, name_en TEXT,
-            price REAL, cost REAL, quantity INTEGER DEFAULT 0, category_id INTEGER
-        )
-    ''')
-    
-    c.execute('''
-        CREATE TABLE employees (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            employee_id TEXT UNIQUE, name TEXT, password TEXT, role TEXT, status TEXT DEFAULT 'Active'
-        )
-    ''')
-    
-    c.execute('''
-        CREATE TABLE sales (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            invoice_no TEXT UNIQUE, employee_id TEXT, customer_name TEXT,
-            sale_date DATETIME, total_amount REAL, discount REAL DEFAULT 0, payment_method TEXT
-        )
-    ''')
-    
-    c.execute('''
-        CREATE TABLE sale_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sale_id INTEGER, product_id INTEGER, quantity INTEGER, price REAL
-        )
-    ''')
-    
-    # Insert employees
-    c.execute('INSERT INTO employees (employee_id, name, password, role) VALUES (?, ?, ?, ?)',
-              ('ADMIN001', 'Admin', 'admin123', 'Admin'))
-    c.execute('INSERT INTO employees (employee_id, name, password, role) VALUES (?, ?, ?, ?)',
-              ('EMP001', 'Zubair', 'staff123', 'Staff'))
-    
-    # Insert categories
-    categories = [
-        ('Молочные продукты', 'Dairy', '🥛', '#FF9800'),
-        ('Напитки', 'Beverages', '🥤', '#2196F3'),
-        ('Продукты питания', 'Groceries', '🥫', '#4CAF50'),
-        ('Хлеб и выпечка', 'Bakery', '🍞', '#FFC107'),
-        ('Сладости', 'Sweets', '🍫', '#E91E63'),
-        ('Мясо и рыба', 'Meat & Fish', '🥩', '#F44336'),
-        ('Овощи и фрукты', 'Fruits & Vegetables', '🥬', '#8BC34A'),
-        ('Бытовая химия', 'Household', '🧹', '#9E9E9E'),
-        ('Электроника', 'Electronics', '📱', '#3F51B5'),
-        ('Одежда', 'Clothing', '👕', '#FF5722'),
-        ('Косметика', 'Cosmetics', '💄', '#E91E63'),
-        ('Другое', 'Other', '📦', '#607D8B'),
-    ]
-    c.executemany('INSERT INTO categories (name_ru, name_en, icon, color) VALUES (?, ?, ?, ?)', categories)
-    
-    # Insert 60 products
-    products = [
-        ('1001', 'Молоко 1л', 'Milk 1L', 120, 80, 50, 'Dairy'),
-        ('1002', 'Йогурт', 'Yogurt', 85, 55, 30, 'Dairy'),
-        ('1003', 'Сыр 200г', 'Cheese', 250, 180, 20, 'Dairy'),
-        ('1004', 'Сметана', 'Sour Cream', 95, 65, 25, 'Dairy'),
-        ('1005', 'Масло', 'Butter', 180, 130, 15, 'Dairy'),
-        ('2001', 'Кока-Кола', 'Coca-Cola', 150, 100, 40, 'Beverages'),
-        ('2002', 'Вода', 'Mineral Water', 60, 35, 100, 'Beverages'),
-        ('2003', 'Сок', 'Orange Juice', 200, 140, 25, 'Beverages'),
-        ('2004', 'Чай', 'Black Tea', 120, 80, 30, 'Beverages'),
-        ('2005', 'Кофе', 'Instant Coffee', 350, 250, 20, 'Beverages'),
-        ('3001', 'Рис 1кг', 'Rice', 180, 120, 60, 'Groceries'),
-        ('3002', 'Макароны', 'Pasta', 90, 60, 45, 'Groceries'),
-        ('3003', 'Масло растительное', 'Sunflower Oil', 220, 160, 35, 'Groceries'),
-        ('3004', 'Мука', 'Flour', 95, 65, 50, 'Groceries'),
-        ('3005', 'Сахар', 'Sugar', 110, 75, 40, 'Groceries'),
-        ('4001', 'Хлеб', 'White Bread', 50, 30, 30, 'Bakery'),
-        ('4002', 'Круассан', 'Croissant', 75, 45, 20, 'Bakery'),
-        ('4003', 'Торт', 'Chocolate Cake', 350, 220, 10, 'Bakery'),
-        ('4004', 'Батон', 'Sliced Loaf', 55, 35, 25, 'Bakery'),
-        ('4005', 'Пирожное', 'Cake Slice', 120, 70, 15, 'Bakery'),
-        ('5001', 'Шоколад', 'Chocolate', 120, 80, 40, 'Sweets'),
-        ('5002', 'Конфеты', 'Candies', 200, 140, 25, 'Sweets'),
-        ('5003', 'Мороженое', 'Ice Cream', 95, 60, 15, 'Sweets'),
-        ('5004', 'Печенье', 'Cookies', 110, 70, 30, 'Sweets'),
-        ('5005', 'Мармелад', 'Marmalade', 85, 55, 20, 'Sweets'),
-        ('6001', 'Курица', 'Chicken Fillet', 450, 320, 20, 'Meat & Fish'),
-        ('6002', 'Говядина', 'Beef', 650, 480, 15, 'Meat & Fish'),
-        ('6003', 'Рыба', 'Fish Fillet', 350, 250, 10, 'Meat & Fish'),
-        ('6004', 'Колбаса', 'Cooked Sausage', 280, 200, 18, 'Meat & Fish'),
-        ('6005', 'Фарш', 'Minced Meat', 320, 230, 12, 'Meat & Fish'),
-        ('7001', 'Яблоки', 'Apples', 150, 100, 30, 'Fruits & Vegetables'),
-        ('7002', 'Бананы', 'Bananas', 120, 80, 25, 'Fruits & Vegetables'),
-        ('7003', 'Картофель', 'Potatoes', 80, 50, 40, 'Fruits & Vegetables'),
-        ('7004', 'Помидоры', 'Tomatoes', 180, 120, 20, 'Fruits & Vegetables'),
-        ('7005', 'Огурцы', 'Cucumbers', 140, 90, 18, 'Fruits & Vegetables'),
-        ('8001', 'Стиральный порошок', 'Laundry Detergent', 350, 250, 15, 'Household'),
-        ('8002', 'Мыло', 'Liquid Soap', 150, 100, 20, 'Household'),
-        ('8003', 'Шампунь', 'Shampoo', 250, 180, 12, 'Household'),
-        ('8004', 'Средство для посуды', 'Dish Soap', 120, 80, 25, 'Household'),
-        ('8005', 'Освежитель', 'Air Freshener', 180, 130, 10, 'Household'),
-        ('9001', 'Наушники', 'Headphones', 1500, 1000, 8, 'Electronics'),
-        ('9002', 'USB кабель', 'USB Cable', 300, 200, 15, 'Electronics'),
-        ('9003', 'Зарядка', 'Charger', 500, 350, 10, 'Electronics'),
-        ('9004', 'Карта памяти', 'Memory Card', 800, 600, 6, 'Electronics'),
-        ('9005', 'Флешка', 'Flash Drive', 400, 280, 12, 'Electronics'),
-        ('10001', 'Футболка', 'T-Shirt', 800, 500, 15, 'Clothing'),
-        ('10002', 'Джинсы', 'Jeans', 2500, 1800, 8, 'Clothing'),
-        ('10003', 'Носки', 'Socks', 150, 100, 30, 'Clothing'),
-        ('10004', 'Шапка', 'Winter Hat', 600, 400, 10, 'Clothing'),
-        ('10005', 'Шарф', 'Scarf', 450, 300, 12, 'Clothing'),
-        ('11001', 'Крем', 'Hand Cream', 250, 180, 20, 'Cosmetics'),
-        ('11002', 'Помада', 'Lipstick', 400, 280, 15, 'Cosmetics'),
-        ('11003', 'Тушь', 'Mascara', 350, 240, 10, 'Cosmetics'),
-        ('11004', 'Тональный крем', 'Foundation', 500, 350, 8, 'Cosmetics'),
-        ('11005', 'Лак', 'Nail Polish', 180, 120, 25, 'Cosmetics'),
-        ('12001', 'Батарейки', 'AA Batteries', 200, 140, 20, 'Other'),
-        ('12002', 'Лампочка', 'LED Bulb', 250, 180, 12, 'Other'),
-        ('12003', 'Свечи', 'Candles', 350, 250, 8, 'Other'),
-        ('12004', 'Скотч', 'Tape', 80, 50, 30, 'Other'),
-        ('12005', 'Ножницы', 'Scissors', 180, 120, 10, 'Other'),
-    ]
-    
-    for p in products:
-        c.execute('SELECT id FROM categories WHERE name_en = ?', (p[6],))
-        cat = c.fetchone()
-        if cat:
-            c.execute('INSERT INTO products (barcode, name_ru, name_en, price, cost, quantity, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                      (p[0], p[1], p[2], p[3], p[4], p[5], cat[0]))
-    
-    conn.commit()
-    conn.close()
-    
-    # Verify
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('SELECT COUNT(*) FROM products')
-    prod_count = c.fetchone()[0]
-    c.execute('SELECT COUNT(*) FROM categories')
-    cat_count = c.fetchone()[0]
-    conn.close()
-    
-    print(f"✅ Database ready! Categories: {cat_count}, Products: {prod_count}")
+    if not os.path.exists(DB_NAME):
+        print("🔄 Creating database...")
+        from database import init_database
+        init_database()
+    else:
+        try:
+            conn = sqlite3.connect(DB_NAME)
+            c = conn.cursor()
+            c.execute('SELECT COUNT(*) FROM products')
+            count = c.fetchone()[0]
+            conn.close()
+            if count == 0:
+                from database import init_database
+                init_database()
+            else:
+                try:
+                    conn = sqlite3.connect(DB_NAME)
+                    c = conn.cursor()
+                    c.execute('SELECT COUNT(*) FROM customers')
+                    conn.close()
+                except:
+                    from database import init_database
+                    init_database()
+                print(f"✅ Database ready with {count} products")
+        except:
+            from database import init_database
+            init_database()
 
-# Initialize database on startup
-if not os.path.exists(DB_NAME):
-    init_db()
-else:
-    # Verify data exists
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        c = conn.cursor()
-        c.execute('SELECT COUNT(*) FROM products')
-        count = c.fetchone()[0]
-        conn.close()
-        if count == 0:
-            init_db()
-        else:
-            print(f"✅ Database already exists with {count} products")
-    except:
-        init_db()
+init_db()
 
 def get_db():
     conn = sqlite3.connect(DB_NAME)
@@ -239,11 +94,6 @@ def login_required(f):
         return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
     return wrapper
-
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('index.html', user=session)
 
 # ========== PRODUCTS API ==========
 @app.route('/api/products')
@@ -362,6 +212,91 @@ def get_stats():
         'low_stock': low_stock
     })
 
+# ========== CUSTOMER API ==========
+@app.route('/api/customers')
+@login_required
+def get_customers():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT * FROM customers ORDER BY id DESC')
+    customers = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return jsonify(customers)
+
+@app.route('/api/customers', methods=['POST'])
+@login_required
+def add_customer():
+    data = request.json
+    conn = get_db()
+    c = conn.cursor()
+    
+    try:
+        c.execute('''
+            INSERT INTO customers (customer_id, name, phone, email, address, discount_rate)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            data.get('customer_id', ''),
+            data.get('name', ''),
+            data.get('phone', ''),
+            data.get('email', ''),
+            data.get('address', ''),
+            float(data.get('discount_rate', 0))
+        ))
+        conn.commit()
+        return jsonify({'status': 'success', 'message': 'Customer added!'})
+    except sqlite3.IntegrityError:
+        return jsonify({'status': 'error', 'message': 'Customer ID already exists!'})
+    finally:
+        conn.close()
+
+@app.route('/api/customers/<int:customer_id>', methods=['PUT'])
+@login_required
+def update_customer(customer_id):
+    data = request.json
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''
+        UPDATE customers SET name=?, phone=?, email=?, address=?, discount_rate=?
+        WHERE id=?
+    ''', (
+        data.get('name', ''),
+        data.get('phone', ''),
+        data.get('email', ''),
+        data.get('address', ''),
+        float(data.get('discount_rate', 0)),
+        customer_id
+    ))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'message': 'Customer updated!'})
+
+@app.route('/api/customers/<int:customer_id>', methods=['DELETE'])
+@login_required
+def delete_customer(customer_id):
+    if session.get('user_role') != 'Admin':
+        return jsonify({'status': 'error', 'message': 'Admin only!'})
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('DELETE FROM customers WHERE id=?', (customer_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success', 'message': 'Customer deleted!'})
+
+@app.route('/api/customers/search')
+@login_required
+def search_customer():
+    query = request.args.get('q', '')
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''
+        SELECT * FROM customers 
+        WHERE customer_id LIKE ? OR name LIKE ? OR phone LIKE ?
+        LIMIT 10
+    ''', (f'%{query}%', f'%{query}%', f'%{query}%'))
+    customers = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return jsonify(customers)
+
 # ========== SALES API ==========
 @app.route('/api/sales', methods=['POST'])
 @login_required
@@ -373,22 +308,43 @@ def create_sale():
     invoice_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
     
     try:
+        # Get customer discount if customer_id provided
+        customer_discount = 0
+        customer_id = data.get('customer_id')
+        if customer_id:
+            c.execute('SELECT discount_rate FROM customers WHERE customer_id = ?', (customer_id,))
+            result = c.fetchone()
+            if result:
+                customer_discount = result['discount_rate']
+        
+        # Calculate total with customer discount
+        items = data.get('items', [])
+        subtotal = sum(item['price'] * item['quantity'] for item in items)
+        customer_discount_amount = subtotal * (customer_discount / 100)
+        manual_discount = float(data.get('discount', 0))
+        total_discount = customer_discount_amount + manual_discount
+        total_amount = subtotal - total_discount
+        
+        # Insert sale
         c.execute('''
-            INSERT INTO sales (invoice_no, employee_id, customer_name, sale_date, total_amount, discount, payment_method)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO sales (invoice_no, employee_id, customer_id, customer_name, 
+                               sale_date, total_amount, discount, payment_method)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             invoice_no,
             session.get('user_id'),
+            data.get('customer_id'),
             data.get('customer_name', 'Walk-in Customer'),
             datetime.now().isoformat(),
-            float(data.get('total_amount', 0)),
-            float(data.get('discount', 0)),
+            total_amount,
+            total_discount,
             data.get('payment_method', 'cash')
         ))
         
         sale_id = c.lastrowid
         
-        for item in data.get('items', []):
+        # Insert sale items and update stock
+        for item in items:
             c.execute('''
                 INSERT INTO sale_items (sale_id, product_id, quantity, price)
                 VALUES (?, ?, ?, ?)
@@ -405,7 +361,15 @@ def create_sale():
             ''', (item['quantity'], item['product_id'], item['quantity']))
         
         conn.commit()
-        return jsonify({'status': 'success', 'invoice_no': invoice_no})
+        return jsonify({
+            'status': 'success',
+            'invoice_no': invoice_no,
+            'subtotal': subtotal,
+            'customer_discount': customer_discount_amount,
+            'manual_discount': manual_discount,
+            'total_discount': total_discount,
+            'total': total_amount
+        })
     except Exception as e:
         conn.rollback()
         return jsonify({'status': 'error', 'message': str(e)})
@@ -616,8 +580,6 @@ def export_report():
     conn.close()
     
     if format_type == 'excel' or format_type == 'csv':
-        import csv
-        import io
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(['Date', 'Invoice', 'Customer', 'Total', 'Discount', 'Payment', 'Employee'])
@@ -625,7 +587,6 @@ def export_report():
             writer.writerow([row['date'], row['invoice_no'], row['customer_name'], 
                            row['total_amount'], row['discount'], row['payment_method'], row['employee_name']])
         output.seek(0)
-        from flask import send_file
         return send_file(
             io.BytesIO(output.getvalue().encode('utf-8')),
             mimetype='text/csv',

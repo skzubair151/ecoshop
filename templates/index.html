@@ -110,7 +110,6 @@
             font-weight: 500;
             transition: 0.3s;
             color: #555;
-            position: relative;
         }
 
         nav button:hover {
@@ -122,15 +121,6 @@
             background: #1a73e8;
             color: white;
             box-shadow: 0 2px 10px rgba(26,115,232,0.3);
-        }
-
-        nav button .badge-tab {
-            background: #e53935;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 8px;
-            font-size: 10px;
-            margin-left: 5px;
         }
 
         /* ===== MAIN CONTAINER ===== */
@@ -398,6 +388,37 @@
             color: #888;
         }
 
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            color: #1a73e8;
+            margin-bottom: 15px;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             header { flex-direction: column; text-align: center; }
@@ -516,6 +537,21 @@
         <!-- ===== SALES TAB ===== -->
         <div id="sales" class="page">
             <h2 id="sales-title">💰 Sales</h2>
+            
+            <!-- ===== CUSTOMER SECTION ===== -->
+            <div style="background:#f0f7ff; padding:15px; border-radius:10px; margin:10px 0; border:1px solid #bbdefb;">
+                <h4 style="color:#1a73e8;">👤 Customer</h4>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <input type="text" id="customer-search" placeholder="Search Customer (ID/Name/Phone)" style="flex:1; min-width:200px;">
+                    <button class="btn btn-primary" onclick="searchCustomer()">🔍 Search</button>
+                    <button class="btn btn-success" onclick="showAddCustomer()">➕ Add New</button>
+                </div>
+                <div id="customer-result" style="margin-top:10px;"></div>
+                <div id="customer-discount-info" style="margin-top:5px; color:#e65100; font-weight:bold;"></div>
+                <input type="hidden" id="selected-customer-id" value="">
+                <input type="hidden" id="customer-discount-rate" value="0">
+            </div>
+
             <p id="scan-label">Scan or enter barcode:</p>
             <input type="text" id="scan-barcode" placeholder="Enter barcode" style="width:300px; padding:10px; font-size:18px;">
             <button class="btn btn-success" onclick="addToCart()" id="add-cart-btn">➕ Add to Cart</button>
@@ -543,7 +579,7 @@
                     <strong id="total-label">Total: </strong>
                     <span class="cart-total" id="cart-total">0</span>
                     <br>
-                    <input type="number" id="cart-discount" placeholder="Discount" value="0" style="width:150px;">
+                    <input type="number" id="cart-discount" placeholder="Manual Discount" value="0" style="width:150px;">
                     <br>
                     <label id="payment-label">Payment Method:</label>
                     <select id="payment-method" style="padding:10px; margin:5px 0;">
@@ -719,6 +755,23 @@
 
     </div>
 
+    <!-- ===== ADD CUSTOMER MODAL ===== -->
+    <div class="modal" id="add-customer-modal">
+        <div class="modal-content">
+            <h3>➕ Add New Customer</h3>
+            <div class="form-row">
+                <div><label>Customer ID:</label><input type="text" id="new-customer-id" placeholder="CUST001"></div>
+                <div><label>Name:</label><input type="text" id="new-customer-name" placeholder="Full Name"></div>
+                <div><label>Phone:</label><input type="text" id="new-customer-phone" placeholder="Phone Number"></div>
+                <div><label>Email:</label><input type="text" id="new-customer-email" placeholder="Email"></div>
+                <div class="full"><label>Address:</label><input type="text" id="new-customer-address" placeholder="Address" style="width:100%;"></div>
+                <div><label>Discount Rate (%):</label><input type="number" id="new-customer-discount" placeholder="0" value="0" min="0" max="50"></div>
+            </div>
+            <button class="btn btn-success" onclick="saveCustomer()">💾 Save Customer</button>
+            <button class="btn btn-danger" onclick="document.getElementById('add-customer-modal').classList.remove('show')">❌ Cancel</button>
+        </div>
+    </div>
+
     <!-- ===== FOOTER ===== -->
     <footer>
         <div class="footer-content">
@@ -764,7 +817,7 @@
                 checkout: 'Checkout',
                 clear_cart: 'Clear Cart',
                 customer_name: 'Customer Name (Optional)',
-                discount: 'Discount',
+                discount: 'Manual Discount',
                 payment_method: 'Payment Method:',
                 payment_cash: 'Cash',
                 payment_card: 'Card',
@@ -840,7 +893,13 @@
                 label_cost: 'Cost:',
                 label_quantity: 'Quantity:',
                 footer_shop: 'EcoShop',
-                dev_by: 'Developed by ZUBAIR'
+                dev_by: 'Developed by ZUBAIR',
+                customer_section: '👤 Customer',
+                search_customer: 'Search Customer (ID/Name/Phone)',
+                search: 'Search',
+                add_new: 'Add New',
+                select_customer: '-- Select Customer --',
+                no_customers: 'No customers found'
             },
             ru: {
                 shop_name: 'ЭкоShop',
@@ -873,7 +932,7 @@
                 checkout: 'Оплатить',
                 clear_cart: 'Очистить корзину',
                 customer_name: 'Имя клиента (опционально)',
-                discount: 'Скидка',
+                discount: 'Ручная скидка',
                 payment_method: 'Способ оплаты:',
                 payment_cash: 'Наличные',
                 payment_card: 'Карта',
@@ -949,7 +1008,13 @@
                 label_cost: 'Себестоимость:',
                 label_quantity: 'Количество:',
                 footer_shop: 'ЭкоShop',
-                dev_by: 'Разработано ЗУБАИРОМ'
+                dev_by: 'Разработано ЗУБАИРОМ',
+                customer_section: '👤 Клиент',
+                search_customer: 'Поиск клиента (ID/Имя/Телефон)',
+                search: 'Поиск',
+                add_new: 'Добавить',
+                select_customer: '-- Выберите клиента --',
+                no_customers: 'Клиенты не найдены'
             }
         };
 
@@ -971,11 +1036,9 @@
             
             const t = translations[lang];
             
-            // Update shop name
             document.getElementById('shop-name').textContent = t.shop_name;
             document.getElementById('footer-shop-name').textContent = t.footer_shop;
             
-            // Update all text
             document.getElementById('tab-dashboard').textContent = t.dashboard;
             document.getElementById('tab-products').textContent = t.products;
             document.getElementById('tab-sales').textContent = t.sales;
@@ -1079,6 +1142,12 @@
                 document.getElementById('emp-th-status').textContent = t.emp_th_status;
                 document.getElementById('emp-th-actions').textContent = t.emp_th_actions;
             }
+            
+            // Customer section translations
+            document.querySelector('#sales .btn-primary').innerHTML = '🔍 ' + t.search;
+            document.querySelector('#sales .btn-success').innerHTML = '➕ ' + t.add_new;
+            document.querySelector('#customer-search').placeholder = t.search_customer;
+            document.querySelector('#add-customer-modal h3').textContent = '➕ ' + t.add_new + ' Customer';
             
             populateCategoryDropdown();
             if (cart.length > 0) renderCart();
@@ -1303,6 +1372,101 @@
                 .catch(err => alert('❌ ' + err.message));
         }
 
+        // ========== CUSTOMER FUNCTIONS ==========
+        function searchCustomer() {
+            const query = document.getElementById('customer-search').value.trim();
+            const resultDiv = document.getElementById('customer-result');
+            const t = translations[currentLang];
+            
+            if (!query) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+            
+            fetch(`/api/customers/search?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(customers => {
+                    if (customers.length === 0) {
+                        resultDiv.innerHTML = `<p style="color:#888;">${t.no_customers}</p>`;
+                        return;
+                    }
+                    let html = `<select id="customer-select" onchange="selectCustomer(this.value)" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">`;
+                    html += `<option value="">${t.select_customer}</option>`;
+                    customers.forEach(c => {
+                        html += `<option value="${c.id}">${c.customer_id} - ${c.name} (${c.phone || 'N/A'}) - ${c.discount_rate}% discount</option>`;
+                    });
+                    html += '</select>';
+                    resultDiv.innerHTML = html;
+                });
+        }
+
+        function selectCustomer(id) {
+            if (!id) {
+                document.getElementById('customer-name').value = '';
+                document.getElementById('customer-discount-info').innerHTML = '';
+                document.getElementById('selected-customer-id').value = '';
+                document.getElementById('customer-discount-rate').value = '0';
+                return;
+            }
+            
+            fetch('/api/customers')
+                .then(res => res.json())
+                .then(customers => {
+                    const customer = customers.find(c => c.id == id);
+                    if (customer) {
+                        document.getElementById('customer-name').value = customer.name;
+                        document.getElementById('selected-customer-id').value = customer.customer_id;
+                        document.getElementById('customer-discount-rate').value = customer.discount_rate;
+                        document.getElementById('customer-discount-info').innerHTML = 
+                            `✅ ${customer.name} - ${customer.discount_rate}% discount applied!`;
+                        document.getElementById('customer-result').innerHTML = '';
+                    }
+                });
+        }
+
+        function showAddCustomer() {
+            document.getElementById('add-customer-modal').classList.add('show');
+            document.getElementById('new-customer-id').value = '';
+            document.getElementById('new-customer-name').value = '';
+            document.getElementById('new-customer-phone').value = '';
+            document.getElementById('new-customer-email').value = '';
+            document.getElementById('new-customer-address').value = '';
+            document.getElementById('new-customer-discount').value = 0;
+        }
+
+        function saveCustomer() {
+            const data = {
+                customer_id: document.getElementById('new-customer-id').value.trim(),
+                name: document.getElementById('new-customer-name').value.trim(),
+                phone: document.getElementById('new-customer-phone').value.trim(),
+                email: document.getElementById('new-customer-email').value.trim(),
+                address: document.getElementById('new-customer-address').value.trim(),
+                discount_rate: parseFloat(document.getElementById('new-customer-discount').value) || 0
+            };
+            
+            if (!data.customer_id || !data.name) {
+                alert('Customer ID and Name are required!');
+                return;
+            }
+            
+            fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    alert('✅ Customer added!');
+                    document.getElementById('add-customer-modal').classList.remove('show');
+                    document.getElementById('customer-search').value = data.customer_id;
+                    searchCustomer();
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            });
+        }
+
         // ========== SALES ==========
         function addToCart() {
             const barcode = document.getElementById('scan-barcode').value.trim();
@@ -1386,19 +1550,28 @@
         function checkout() {
             if (cart.length === 0) { alert('Cart is empty!'); return; }
 
-            const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-            const discount = parseFloat(document.getElementById('cart-discount').value) || 0;
+            const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const manualDiscount = parseFloat(document.getElementById('cart-discount').value) || 0;
             const payment_method = document.getElementById('payment-method').value;
             const customer_name = document.getElementById('customer-name').value.trim() || 'Walk-in Customer';
+            
+            // Get customer discount
+            const customerDiscountRate = parseFloat(document.getElementById('customer-discount-rate').value) || 0;
+            const customerId = document.getElementById('selected-customer-id').value || null;
+            
+            const customerDiscountAmount = subtotal * (customerDiscountRate / 100);
+            const totalDiscount = customerDiscountAmount + manualDiscount;
+            const total = subtotal - totalDiscount;
 
-            if (discount > total) { alert('Discount cannot be more than total!'); return; }
+            if (manualDiscount > subtotal) { alert('Discount cannot be more than total!'); return; }
 
             const data = {
                 items: cart,
-                total_amount: total - discount,
-                discount: discount,
-                payment_method: payment_method,
-                customer_name: customer_name
+                customer_id: customerId,
+                customer_name: customer_name,
+                total_amount: total,
+                discount: manualDiscount,
+                payment_method: payment_method
             };
 
             fetch('/api/sales', {
@@ -1409,16 +1582,27 @@
             .then(res => res.json())
             .then(result => {
                 if (result.status === 'success') {
-                    alert(`✅ Sale Complete!\nInvoice: ${result.invoice_no}\nTotal: ${(total - discount).toFixed(2)}`);
+                    let msg = `✅ Sale Complete!\nInvoice: ${result.invoice_no}\n`;
+                    msg += `Subtotal: ${result.subtotal.toFixed(2)}\n`;
+                    if (result.customer_discount > 0) msg += `Customer Discount: -${result.customer_discount.toFixed(2)}\n`;
+                    if (result.manual_discount > 0) msg += `Manual Discount: -${result.manual_discount.toFixed(2)}\n`;
+                    msg += `Total: ${result.total.toFixed(2)}`;
+                    alert(msg);
                     cart = [];
                     renderCart();
                     loadDashboard();
                     document.getElementById('cart-discount').value = 0;
                     document.getElementById('customer-name').value = '';
+                    document.getElementById('customer-discount-info').innerHTML = '';
+                    document.getElementById('selected-customer-id').value = '';
+                    document.getElementById('customer-discount-rate').value = '0';
+                    document.getElementById('customer-search').value = '';
+                    document.getElementById('customer-result').innerHTML = '';
                 } else {
                     alert('❌ ' + result.message);
                 }
-            });
+            })
+            .catch(err => alert('❌ Error: ' + err.message));
         }
 
         // ========== REPORTS ==========
@@ -1812,6 +1996,14 @@
 
             document.getElementById('font-size-slider').addEventListener('input', function() {
                 document.getElementById('font-size-label').textContent = this.value + 'px';
+            });
+
+            // Customer search on Enter key
+            document.getElementById('customer-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchCustomer();
+                }
             });
 
             setLanguage('en');
