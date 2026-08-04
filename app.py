@@ -1,3 +1,17 @@
+from backup import auto_backup
+
+# Add this after every save operation (add product, sale, etc.)
+
+@app.route('/api/sales', methods=['POST'])
+@login_required
+def create_sale():
+    # ... existing code ...
+    
+    # After successful sale, auto backup
+    if conn.commit():
+        auto_backup()
+    
+    return jsonify(...)
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 import sqlite3
 import os
