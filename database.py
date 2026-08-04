@@ -1,9 +1,13 @@
 import sqlite3
+import os
 
 DB_NAME = 'ecoshop.db'
 
+def get_connection():
+    return sqlite3.connect(DB_NAME)
+
 def init_database():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_connection()
     cursor = conn.cursor()
     
     # ========== CREATE CATEGORIES TABLE ==========

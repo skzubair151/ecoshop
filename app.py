@@ -7,12 +7,68 @@ import random
 app = Flask(__name__)
 app.secret_key = 'ecoshop_secret_key_2026'
 
-DB_NAME = 'ecoshop.db'
+# ========== DATABASE PATH FOR RENDER ==========
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = os.path.join(BASE_DIR, 'ecoshop.db')
 
 def get_db():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
+
+# ========== INITIALIZE DATABASE ON STARTUP ==========
+def ensure_database():
+    """Ensure database exists with all tables and data"""
+    try:
+        print(f"📂 Database path: {DB_NAME}")
+        
+        if not os.path.exists(DB_NAME):
+            print("🔄 Database not found. Creating...")
+            from database import init_database
+            init_database()
+            return True
+        
+        # Check if tables exist
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
+        if not cursor.fetchone():
+            print("🔄 Tables missing. Recreating database...")
+            conn.close()
+            os.remove(DB_NAME)
+            from database import init_database
+            init_database()
+            return True
+        
+        # Check if employees exist
+        cursor.execute("SELECT COUNT(*) FROM employees")
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        if count == 0:
+            print("🔄 No employees found. Recreating database...")
+            os.remove(DB_NAME)
+            from database import init_database
+            init_database()
+            return True
+            
+        print(f"✅ Database ready! Found {count} employees.")
+        return True
+        
+    except Exception as e:
+        print(f"⚠️ Database error: {e}")
+        if os.path.exists(DB_NAME):
+            try:
+                os.remove(DB_NAME)
+            except:
+                pass
+        from database import init_database
+        init_database()
+        return True
+
+# Call this when app starts
+print("🚀 Starting EcoShop...")
+ensure_database()
 
 # ========== LOGIN REQUIRED DECORATOR ==========
 def login_required(f):
@@ -30,22 +86,45 @@ def login():
         employee_id = request.form.get('employee_id')
         password = request.form.get('password')
         
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT * FROM employees 
-            WHERE employee_id = ? AND password = ? AND status = 'Active'
-        ''', (employee_id, password))
-        user = cursor.fetchone()
-        conn.close()
+        print(f"🔐 Login attempt: {employee_id}")
         
-        if user:
-            session['user_id'] = user['employee_id']
-            session['user_name'] = user['name']
-            session['user_role'] = user['role']
-            return jsonify({'status': 'success', 'role': user['role']})
-        else:
-            return jsonify({'status': 'error', 'message': 'Invalid credentials!'})
+        try:
+            # Check if database exists
+            if not os.path.exists(DB_NAME):
+                print("❌ Database file not found!")
+                return jsonify({'status': 'error', 'message': 'Database not found. Please try again.'})
+            
+            conn = get_db()
+            cursor = conn.cursor()
+            
+            # Check if employees table exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='employees'")
+            if not cursor.fetchone():
+                print("❌ Employees table not found!")
+                conn.close()
+                return jsonify({'status': 'error', 'message': 'Database not initialized. Please contact admin.'})
+            
+            # Check if employee exists
+            cursor.execute('''
+                SELECT * FROM employees 
+                WHERE employee_id = ? AND password = ? AND status = 'Active'
+            ''', (employee_id, password))
+            user = cursor.fetchone()
+            conn.close()
+            
+            if user:
+                print(f"✅ Login successful: {user['name']}")
+                session['user_id'] = user['employee_id']
+                session['user_name'] = user['name']
+                session['user_role'] = user['role']
+                return jsonify({'status': 'success', 'role': user['role']})
+            else:
+                print("❌ Invalid credentials")
+                return jsonify({'status': 'error', 'message': 'Invalid credentials!'})
+                
+        except Exception as e:
+            print(f"❌ Login error: {e}")
+            return jsonify({'status': 'error', 'message': str(e)})
     
     return render_template('login.html')
 
@@ -359,7 +438,7 @@ def get_sales_report():
     elif period == 'monthly':
         start_date = (today - timedelta(days=30)).isoformat()
         end_date = today.isoformat()
-    else:  # yearly
+    else:
         start_date = (today - timedelta(days=365)).isoformat()
         end_date = today.isoformat()
     
@@ -468,7 +547,6 @@ def get_profit_report():
 
 # ========== RUN APP ==========
 if __name__ == '__main__':
-    if not os.path.exists(DB_NAME):
-        from database import init_database
-        init_database()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Ensure database exists
+    ensure_database()
+    app.run(debug=True, host='0.0.0.0', port=10000)
