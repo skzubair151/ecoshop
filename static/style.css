@@ -258,36 +258,6 @@ button:hover {
     background: #e65100;
 }
 
-/* ===== SETTINGS ===== */
-.settings-card {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-    transition: 0.3s;
-}
-
-.settings-card:hover {
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.settings-card h3 {
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.settings-card input[type="file"] {
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-}
-
-.settings-card input[type="range"] {
-    width: 100%;
-    margin: 10px 0;
-}
-
 /* ===== PRODUCT FORM ===== */
 .product-form {
     display: none;
@@ -422,6 +392,63 @@ button:hover {
     font-weight: bold;
 }
 
+/* ===== SETTINGS CARD STYLES ===== */
+.settings-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    transition: 0.3s;
+}
+
+.settings-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.settings-card h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.settings-card input[type="file"] {
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    width: 100%;
+}
+
+.settings-card input[type="range"] {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.settings-card .btn-success {
+    background: #43a047;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.settings-card .btn-success:hover {
+    background: #2e7d32;
+}
+
+.settings-card .btn-danger {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.settings-card .btn-danger:hover {
+    background: #b71c1c;
+}
+
 /* ===== FOOTER STYLES ===== */
 footer {
     text-align: center;
@@ -526,10 +553,7 @@ footer {
         display: block;
         margin: 3px 0;
     }
-    .settings-card {
-        grid-column: 1 / -1;
-    }
-    #settings .settings-grid {
-        grid-template-columns: 1fr;
+    #settings > div {
+        grid-template-columns: 1fr !important;
     }
 }

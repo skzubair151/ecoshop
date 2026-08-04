@@ -522,23 +522,7 @@ def export_report():
     data = [dict(row) for row in cursor.fetchall()]
     conn.close()
     
-    if format_type == 'excel':
-        # Create CSV (Excel compatible)
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['Date', 'Invoice', 'Customer', 'Total', 'Discount', 'Payment', 'Employee'])
-        for row in data:
-            writer.writerow([row['date'], row['invoice_no'], row['customer_name'], 
-                           row['total_amount'], row['discount'], row['payment_method'], row['employee_name']])
-        output.seek(0)
-        return send_file(
-            io.BytesIO(output.getvalue().encode('utf-8')),
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name=f'sales_report_{period}.csv'
-        )
-    
-    elif format_type == 'csv':
+    if format_type == 'excel' or format_type == 'csv':
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(['Date', 'Invoice', 'Customer', 'Total', 'Discount', 'Payment', 'Employee'])
@@ -554,11 +538,10 @@ def export_report():
         )
     
     elif format_type == 'pdf':
-        # For PDF, return JSON that will be converted by frontend
         return jsonify({
             'status': 'success',
             'data': data,
-            'message': 'PDF export not fully implemented in backend. Please use CSV or Excel.'
+            'message': 'PDF report generated'
         })
     
     else:

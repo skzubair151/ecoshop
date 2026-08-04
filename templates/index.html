@@ -247,7 +247,7 @@
                 <!-- Font Selection -->
                 <div class="settings-card">
                     <h3 id="settings-font">🔤 Font Selection</h3>
-                    <select id="font-select" onchange="changeFont(this.value)" style="width:100%; padding:10px;">
+                    <select id="font-select" style="width:100%; padding:10px;">
                         <option value="Arial">Arial</option>
                         <option value="Arial Black">Arial Black</option>
                         <option value="Verdana">Verdana</option>
@@ -260,15 +260,22 @@
                     </select>
                     <br>
                     <label style="margin-top:10px; display:block;">Font Size:</label>
-                    <input type="range" id="font-size-slider" min="12" max="24" value="14" oninput="changeFontSize(this.value)" style="width:100%;">
+                    <input type="range" id="font-size-slider" min="12" max="24" value="14" style="width:100%;">
                     <span id="font-size-label">14px</span>
+                    <br>
+                    <button onclick="applyFontSettings()" class="btn-success" style="margin-top:10px;">✅ Apply Font</button>
                 </div>
 
                 <!-- Background Image -->
                 <div class="settings-card">
                     <h3 id="settings-bg">🖼️ Background Image</h3>
-                    <input type="file" id="bg-image-upload" accept="image/*" onchange="uploadBackgroundImage(event)" style="width:100%; padding:5px;">
+                    <input type="file" id="bg-image-upload" accept="image/*" style="width:100%; padding:5px;">
                     <br>
+                    <label style="margin-top:10px; display:block;">Transparency (Max 50%):</label>
+                    <input type="range" id="bg-transparency" min="0" max="50" value="0" style="width:100%;">
+                    <span id="bg-transparency-label">0%</span>
+                    <br>
+                    <button onclick="applyBackgroundSettings()" class="btn-success" style="margin-top:10px;">✅ Apply Background</button>
                     <button onclick="resetBackgroundImage()" class="btn-danger" style="margin-top:5px;">🔄 Reset to Default</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="bg-status">Current: Default</p>
                 </div>
@@ -440,7 +447,10 @@
                 enter_admin_password: 'Enter Admin Password to Delete:',
                 invalid_password: '❌ Invalid Password!',
                 delete_success: '✅ Deleted Successfully!',
-                delete_failed: '❌ Deletion Failed!'
+                delete_failed: '❌ Deletion Failed!',
+                apply_font: '✅ Apply Font',
+                apply_background: '✅ Apply Background',
+                transparency: 'Transparency (Max 50%):'
             },
             ru: {
                 dashboard: 'Панель',
@@ -547,7 +557,10 @@
                 enter_admin_password: 'Введите пароль администратора для удаления:',
                 invalid_password: '❌ Неверный пароль!',
                 delete_success: '✅ Успешно удалено!',
-                delete_failed: '❌ Ошибка удаления!'
+                delete_failed: '❌ Ошибка удаления!',
+                apply_font: '✅ Применить шрифт',
+                apply_background: '✅ Применить фон',
+                transparency: 'Прозрачность (Макс 50%):'
             }
         };
 
@@ -559,8 +572,6 @@
         let allProducts = [];
         let currentReportPeriod = 'daily';
         let currentUserRole = '{{ user.user_role }}';
-        let isFullscreen = false;
-        let isTabView = false;
 
         // ========== LANGUAGE ==========
         function setLanguage(lang) {
@@ -1155,37 +1166,75 @@
 
         // ========== EXPORT REPORTS ==========
         function exportReport(format) {
-            const t = translations[currentLang];
             const period = currentReportPeriod;
             
             fetch(`/api/reports/export?period=${period}&format=${format}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (format === 'pdf') {
+                        return res.json();
+                    }
+                    return res.blob();
+                })
                 .then(data => {
-                    if (data.status === 'success') {
-                        // Create download link
+                    if (format === 'pdf') {
+                        if (data.status === 'success') {
+                            // For PDF, create a simple text report
+                            let text = 'Sales Report\n';
+                            text += '='.repeat(50) + '\n';
+                            text += `Period: ${period}\n`;
+                            text += `Date: ${new Date().toLocaleDateString()}\n`;
+                            text += '='.repeat(50) + '\n\n';
+                            
+                            data.data.forEach(row => {
+                                text += `Date: ${row.date}\n`;
+                                text += `Invoice: ${row.invoice_no}\n`;
+                                text += `Customer: ${row.customer_name}\n`;
+                                text += `Total: ${row.total_amount}\n`;
+                                text += `Discount: ${row.discount}\n`;
+                                text += `Payment: ${row.payment_method}\n`;
+                                text += `Employee: ${row.employee_name}\n`;
+                                text += '-'.repeat(30) + '\n';
+                            });
+                            
+                            const blob = new Blob([text], { type: 'text/plain' });
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = `sales_report_${period}.txt`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        } else {
+                            alert('❌ Export failed!');
+                        }
+                    } else {
                         const link = document.createElement('a');
-                        link.href = data.url;
-                        link.download = data.filename;
+                        link.href = URL.createObjectURL(data);
+                        link.download = `sales_report_${period}.${format === 'excel' ? 'csv' : format}`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                    } else {
-                        alert('❌ ' + (data.message || 'Export failed!'));
                     }
                 })
                 .catch(err => alert('❌ Export error: ' + err.message));
         }
 
-        // ========== SETTINGS ==========
+        // ========== SETTINGS FUNCTIONS ==========
+
+        let isFullscreen = false;
+        let isTabView = false;
+        let currentTransparency = 0;
+        let currentBgImage = null;
+
         function toggleFullscreen() {
+            const t = translations[currentLang];
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
                 isFullscreen = true;
-                document.getElementById('fullscreen-status').textContent = translations[currentLang].current_on;
+                document.getElementById('fullscreen-status').textContent = t.current_on;
             } else {
                 document.exitFullscreen();
                 isFullscreen = false;
-                document.getElementById('fullscreen-status').textContent = translations[currentLang].current_off;
+                document.getElementById('fullscreen-status').textContent = t.current_off;
             }
         }
 
@@ -1207,37 +1256,126 @@
             }
         }
 
-        function changeFont(font) {
+        function applyFontSettings() {
+            const font = document.getElementById('font-select').value;
+            const size = document.getElementById('font-size-slider').value;
+            
             document.body.style.fontFamily = font;
-        }
-
-        function changeFontSize(size) {
             document.body.style.fontSize = size + 'px';
             document.getElementById('font-size-label').textContent = size + 'px';
+            
+            // Save to localStorage
+            localStorage.setItem('ecoshop_font', font);
+            localStorage.setItem('ecoshop_fontsize', size);
+            
+            alert('✅ Font settings applied!');
         }
 
-        function uploadBackgroundImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function applyBackgroundSettings() {
+            const fileInput = document.getElementById('bg-image-upload');
+            const transparency = parseInt(document.getElementById('bg-transparency').value);
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.body.style.backgroundImage = `url('${e.target.result}')`;
+            // Apply transparency
+            currentTransparency = transparency;
+            document.getElementById('bg-transparency-label').textContent = transparency + '%';
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentBgImage = e.target.result;
+                    applyBackground();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else if (currentBgImage) {
+                applyBackground();
+            } else {
+                alert('⚠️ Please select an image first!');
+            }
+        }
+
+        function applyBackground() {
+            if (currentBgImage) {
+                const transparency = currentTransparency / 100;
+                document.body.style.backgroundImage = `url('${currentBgImage}')`;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundAttachment = 'fixed';
-                document.getElementById('bg-status').textContent = 'Current: Custom Image';
-            };
-            reader.readAsDataURL(file);
+                
+                // Apply transparency overlay (max 50% = 0.5)
+                const overlay = document.getElementById('bg-overlay');
+                if (!overlay) {
+                    const div = document.createElement('div');
+                    div.id = 'bg-overlay';
+                    div.style.position = 'fixed';
+                    div.style.top = '0';
+                    div.style.left = '0';
+                    div.style.width = '100%';
+                    div.style.height = '100%';
+                    div.style.zIndex = '-1';
+                    div.style.pointerEvents = 'none';
+                    document.body.prepend(div);
+                }
+                document.getElementById('bg-overlay').style.background = `rgba(255, 255, 255, ${transparency})`;
+                
+                document.getElementById('bg-status').textContent = 'Current: Custom Image (' + currentTransparency + '% transparency)';
+                
+                // Save to localStorage
+                localStorage.setItem('ecoshop_bg', currentBgImage);
+                localStorage.setItem('ecoshop_transparency', currentTransparency);
+                
+                alert('✅ Background applied with ' + currentTransparency + '% transparency!');
+            }
         }
 
         function resetBackgroundImage() {
+            const t = translations[currentLang];
+            currentBgImage = null;
+            currentTransparency = 0;
+            
             document.body.style.backgroundImage = '';
             document.body.style.backgroundSize = '';
             document.body.style.backgroundPosition = '';
             document.body.style.backgroundAttachment = '';
-            document.getElementById('bg-status').textContent = translations[currentLang].current_default;
+            
+            const overlay = document.getElementById('bg-overlay');
+            if (overlay) overlay.remove();
+            
+            document.getElementById('bg-status').textContent = t.current_default;
             document.getElementById('bg-image-upload').value = '';
+            document.getElementById('bg-transparency').value = 0;
+            document.getElementById('bg-transparency-label').textContent = '0%';
+            
+            localStorage.removeItem('ecoshop_bg');
+            localStorage.removeItem('ecoshop_transparency');
+            
+            alert('✅ Background reset to default!');
+        }
+
+        // ========== LOAD SETTINGS FROM LOCALSTORAGE ==========
+        function loadSettings() {
+            // Load font
+            const savedFont = localStorage.getItem('ecoshop_font');
+            const savedSize = localStorage.getItem('ecoshop_fontsize');
+            if (savedFont) {
+                document.body.style.fontFamily = savedFont;
+                document.getElementById('font-select').value = savedFont;
+            }
+            if (savedSize) {
+                document.body.style.fontSize = savedSize + 'px';
+                document.getElementById('font-size-slider').value = savedSize;
+                document.getElementById('font-size-label').textContent = savedSize + 'px';
+            }
+            
+            // Load background
+            const savedBg = localStorage.getItem('ecoshop_bg');
+            const savedTrans = localStorage.getItem('ecoshop_transparency');
+            if (savedBg) {
+                currentBgImage = savedBg;
+                currentTransparency = parseInt(savedTrans) || 0;
+                document.getElementById('bg-transparency').value = currentTransparency;
+                document.getElementById('bg-transparency-label').textContent = currentTransparency + '%';
+                applyBackground();
+            }
         }
 
         // ========== EMPLOYEES ==========
@@ -1341,7 +1479,18 @@
                 }
             });
 
+            // Update transparency label in real-time
+            document.getElementById('bg-transparency').addEventListener('input', function() {
+                document.getElementById('bg-transparency-label').textContent = this.value + '%';
+            });
+
+            // Update font size label in real-time
+            document.getElementById('font-size-slider').addEventListener('input', function() {
+                document.getElementById('font-size-label').textContent = this.value + 'px';
+            });
+
             setLanguage('en');
+            loadSettings();
         });
     </script>
 
