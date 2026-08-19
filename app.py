@@ -824,3 +824,26 @@ def export_report():
 # ========== START APP ==========
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=10000)
+
+    # ========== PRODUCT IMAGE UPLOAD ==========
+@app.route('/api/products/<int:product_id>/image', methods=['POST'])
+@login_required
+def upload_product_image(product_id):
+    try:
+        if 'image' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No image provided'})
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No image selected'})
+        
+        # Save image
+        filename = f'product_{product_id}.jpg'
+        filepath = os.path.join('static', 'product_images', filename)
+        
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        file.save(filepath)
+        
+        return jsonify({'status': 'success', 'message': 'Image uploaded!'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})

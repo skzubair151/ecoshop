@@ -222,3 +222,8 @@ def init_database():
 
 if __name__ == '__main__':
     init_database()
+
+    # In products table, add this column:
+c.execute('''
+    ALTER TABLE products ADD COLUMN image TEXT
+''')
