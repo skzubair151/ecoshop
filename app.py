@@ -1,17 +1,3 @@
-from backup import auto_backup
-
-# Add this after every save operation (add product, sale, etc.)
-
-@app.route('/api/sales', methods=['POST'])
-@login_required
-def create_sale():
-    # ... existing code ...
-    
-    # After successful sale, auto backup
-    if conn.commit():
-        auto_backup()
-    
-    return jsonify(...)
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 import sqlite3
 import os
@@ -31,7 +17,6 @@ app.secret_key = 'ecoshop_secret_key_2026'
 DB_NAME = 'ecoshop.db'
 
 def init_db():
-    """Initialize database with all data"""
     if not os.path.exists(DB_NAME):
         print("🔄 Creating database...")
         from database import init_database
@@ -133,10 +118,20 @@ def add_product():
     c = conn.cursor()
     
     try:
-        c.execute('INSERT INTO products (barcode, name_ru, name_en, price, cost, quantity, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                  (data.get('barcode', ''), data.get('name_ru', ''), data.get('name_en', ''),
-                   float(data.get('price', 0)), float(data.get('cost', 0)), int(data.get('quantity', 0)),
-                   data.get('category_id') if data.get('category_id') else None))
+        c.execute('''
+            INSERT INTO products (barcode, name_ru, name_en, price, cost, quantity, weight, unit_type, category_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data.get('barcode', ''),
+            data.get('name_ru', ''),
+            data.get('name_en', ''),
+            float(data.get('price', 0)),
+            float(data.get('cost', 0)),
+            float(data.get('quantity', 0)),
+            float(data.get('weight', 0)),
+            data.get('unit_type', 'qty'),
+            data.get('category_id') if data.get('category_id') else None
+        ))
         conn.commit()
         return jsonify({'status': 'success', 'message': 'Product added!'})
     except sqlite3.IntegrityError:
@@ -150,10 +145,21 @@ def update_product(product_id):
     data = request.json
     conn = get_db()
     c = conn.cursor()
-    c.execute('UPDATE products SET barcode=?, name_ru=?, name_en=?, price=?, cost=?, quantity=?, category_id=? WHERE id=?',
-              (data.get('barcode', ''), data.get('name_ru', ''), data.get('name_en', ''),
-               float(data.get('price', 0)), float(data.get('cost', 0)), int(data.get('quantity', 0)),
-               data.get('category_id') if data.get('category_id') else None, product_id))
+    c.execute('''
+        UPDATE products SET barcode=?, name_ru=?, name_en=?, price=?, cost=?, quantity=?, weight=?, unit_type=?, category_id=?
+        WHERE id=?
+    ''', (
+        data.get('barcode', ''),
+        data.get('name_ru', ''),
+        data.get('name_en', ''),
+        float(data.get('price', 0)),
+        float(data.get('cost', 0)),
+        float(data.get('quantity', 0)),
+        float(data.get('weight', 0)),
+        data.get('unit_type', 'qty'),
+        data.get('category_id') if data.get('category_id') else None,
+        product_id
+    ))
     conn.commit()
     conn.close()
     return jsonify({'status': 'success', 'message': 'Product updated!'})
@@ -327,7 +333,6 @@ def create_sale():
     invoice_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
     
     try:
-        # Get customer discount if customer_id provided
         customer_discount = 0
         customer_id = data.get('customer_id')
         if customer_id:
@@ -336,15 +341,17 @@ def create_sale():
             if result:
                 customer_discount = result['discount_rate']
         
-        # Calculate total with customer discount
         items = data.get('items', [])
-        subtotal = sum(item['price'] * item['quantity'] for item in items)
+        subtotal = 0
+        for item in items:
+            amount = item.get('quantity', 0) or item.get('weight', 0)
+            subtotal += item['price'] * amount
+        
         customer_discount_amount = subtotal * (customer_discount / 100)
         manual_discount = float(data.get('discount', 0))
         total_discount = customer_discount_amount + manual_discount
         total_amount = subtotal - total_discount
         
-        # Insert sale
         c.execute('''
             INSERT INTO sales (invoice_no, employee_id, customer_id, customer_name, 
                                sale_date, total_amount, discount, payment_method)
@@ -362,24 +369,32 @@ def create_sale():
         
         sale_id = c.lastrowid
         
-        # Insert sale items and update stock
         for item in items:
-            c.execute('''
-                INSERT INTO sale_items (sale_id, product_id, quantity, price)
-                VALUES (?, ?, ?, ?)
-            ''', (
-                sale_id,
-                item['product_id'],
-                item['quantity'],
-                item['price']
-            ))
-            
-            c.execute('''
-                UPDATE products SET quantity = quantity - ? 
-                WHERE id = ? AND quantity >= ?
-            ''', (item['quantity'], item['product_id'], item['quantity']))
+            if item.get('unit_type') == 'weight':
+                weight_sold = item.get('weight', 0)
+                c.execute('UPDATE products SET weight = weight - ? WHERE id = ? AND weight >= ?', 
+                         (weight_sold, item['product_id'], weight_sold))
+                c.execute('''
+                    INSERT INTO sale_items (sale_id, product_id, quantity, weight, unit_type, price)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (sale_id, item['product_id'], 0, weight_sold, 'weight', item['price']))
+            else:
+                qty_sold = item.get('quantity', 0)
+                c.execute('UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?', 
+                         (qty_sold, item['product_id'], qty_sold))
+                c.execute('''
+                    INSERT INTO sale_items (sale_id, product_id, quantity, weight, unit_type, price)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (sale_id, item['product_id'], qty_sold, 0, 'qty', item['price']))
         
         conn.commit()
+        
+        try:
+            from backup import auto_backup
+            auto_backup()
+        except:
+            pass
+        
         return jsonify({
             'status': 'success',
             'invoice_no': invoice_no,
@@ -448,7 +463,9 @@ def get_low_stock():
     c = conn.cursor()
     c.execute('''
         SELECT p.*, c.name_ru as category_ru, c.name_en as category_en
-        FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.quantity < 5 ORDER BY p.quantity ASC
+        FROM products p LEFT JOIN categories c ON p.category_id = c.id 
+        WHERE (p.unit_type = 'qty' AND p.quantity < 5) OR (p.unit_type = 'weight' AND p.weight < 1)
+        ORDER BY p.quantity ASC
     ''')
     products = [dict(row) for row in c.fetchall()]
     conn.close()
@@ -564,6 +581,99 @@ def verify_admin():
         return jsonify({'status': 'success'})
     return jsonify({'status': 'error', 'message': 'Invalid admin password!'})
 
+# ========== BACKUP API ==========
+@app.route('/api/backup/status')
+@login_required
+def get_backup_status():
+    try:
+        backup_dir = 'backups'
+        backups = []
+        
+        if os.path.exists(backup_dir):
+            for f in os.listdir(backup_dir):
+                if f.startswith('ecoshop_backup_') and f.endswith('.db'):
+                    path = os.path.join(backup_dir, f)
+                    size = os.path.getsize(path)
+                    modified = datetime.fromtimestamp(os.path.getmtime(path))
+                    backups.append({
+                        'name': f,
+                        'size': size,
+                        'date': modified.strftime('%Y-%m-%d %H:%M:%S')
+                    })
+        
+        backups = sorted(backups, key=lambda x: x['date'], reverse=True)
+        
+        conn = get_db()
+        c = conn.cursor()
+        c.execute('SELECT COUNT(*) FROM products')
+        products = c.fetchone()[0]
+        c.execute('SELECT COUNT(*) FROM sales')
+        sales = c.fetchone()[0]
+        c.execute('SELECT COUNT(*) FROM customers')
+        customers = c.fetchone()[0]
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'backups': backups[:10],
+            'stats': {
+                'products': products,
+                'sales': sales,
+                'customers': customers
+            },
+            'last_backup': backups[0]['date'] if backups else None
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
+@app.route('/api/backup/create', methods=['POST'])
+@login_required
+def create_backup():
+    try:
+        from backup import auto_backup
+        result = auto_backup()
+        
+        if result:
+            return jsonify({
+                'status': 'success',
+                'message': 'Backup created and uploaded to Google Drive!',
+                'backup_file': os.path.basename(result)
+            })
+        else:
+            return jsonify({'status': 'error', 'message': 'Backup creation failed!'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
+@app.route('/api/backup/download')
+@login_required
+def download_backup():
+    try:
+        backup_dir = 'backups'
+        if not os.path.exists(backup_dir):
+            return jsonify({'status': 'error', 'message': 'No backups found!'})
+        
+        backups = []
+        for f in os.listdir(backup_dir):
+            if f.startswith('ecoshop_backup_') and f.endswith('.db'):
+                path = os.path.join(backup_dir, f)
+                backups.append((os.path.getmtime(path), path, f))
+        
+        if not backups:
+            return jsonify({'status': 'error', 'message': 'No backups found!'})
+        
+        backups.sort(reverse=True)
+        latest_path = backups[0][1]
+        latest_name = backups[0][2]
+        
+        return send_file(
+            latest_path,
+            as_attachment=True,
+            download_name=latest_name,
+            mimetype='application/octet-stream'
+        )
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
 # ========== EXPORT REPORTS ==========
 @app.route('/api/reports/export')
 @login_required
@@ -614,34 +724,28 @@ def export_report():
         )
     
     elif format_type == 'pdf':
-        # Create PDF
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
         
-        # Styles
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             'TitleStyle',
             parent=styles['Heading1'],
             fontSize=16,
-            alignment=1,  # Center
+            alignment=1,
             spaceAfter=20
         )
         
-        # Build content
         content = []
         
-        # Title
         title = Paragraph(f"📊 Sales Report - {period.upper()}", title_style)
         content.append(title)
         content.append(Spacer(1, 10))
         
-        # Date
         date_info = Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
         content.append(date_info)
         content.append(Spacer(1, 10))
         
-        # Summary
         total_sales = len(data)
         total_revenue = sum(row['total_amount'] for row in data if row['total_amount'])
         total_discount = sum(row['discount'] for row in data if row['discount'])
@@ -669,7 +773,6 @@ def export_report():
         content.append(summary_table)
         content.append(Spacer(1, 20))
         
-        # Sales table
         if data:
             table_data = [
                 ['Date', 'Invoice', 'Customer', 'Total', 'Discount', 'Payment', 'Employee']
@@ -701,12 +804,10 @@ def export_report():
             no_data = Paragraph("No sales data available for this period.", styles['Normal'])
             content.append(no_data)
         
-        # Footer
         content.append(Spacer(1, 20))
         footer = Paragraph(f"Generated by EcoShop | {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal'])
         content.append(footer)
         
-        # Build PDF
         doc.build(content)
         buffer.seek(0)
         
@@ -723,189 +824,3 @@ def export_report():
 # ========== START APP ==========
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=10000)
-
-    @app.route('/api/products')
-@login_required
-def get_products():
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('SELECT id, barcode, name_ru, name_en, price, cost, quantity, weight, unit_type, category_id FROM products ORDER BY id DESC')
-    products = [dict(row) for row in c.fetchall()]
-    conn.close()
-    return jsonify(products)
-
-@app.route('/api/products', methods=['POST'])
-@login_required
-def add_product():
-    data = request.json
-    conn = get_db()
-    c = conn.cursor()
-    
-    try:
-        c.execute('''
-            INSERT INTO products (barcode, name_ru, name_en, price, cost, quantity, weight, unit_type, category_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            data.get('barcode', ''),
-            data.get('name_ru', ''),
-            data.get('name_en', ''),
-            float(data.get('price', 0)),
-            float(data.get('cost', 0)),
-            float(data.get('quantity', 0)),
-            float(data.get('weight', 0)),
-            data.get('unit_type', 'qty'),
-            data.get('category_id') if data.get('category_id') else None
-        ))
-        conn.commit()
-        return jsonify({'status': 'success', 'message': 'Product added!'})
-    except sqlite3.IntegrityError:
-        return jsonify({'status': 'error', 'message': 'Barcode already exists!'})
-    finally:
-        conn.close()
-
-        @app.route('/api/products/<int:product_id>', methods=['PUT'])
-@login_required
-def update_product(product_id):
-    data = request.json
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''
-        UPDATE products SET barcode=?, name_ru=?, name_en=?, price=?, cost=?, quantity=?, weight=?, unit_type=?, category_id=?
-        WHERE id=?
-    ''', (
-        data.get('barcode', ''),
-        data.get('name_ru', ''),
-        data.get('name_en', ''),
-        float(data.get('price', 0)),
-        float(data.get('cost', 0)),
-        float(data.get('quantity', 0)),
-        float(data.get('weight', 0)),
-        data.get('unit_type', 'qty'),
-        data.get('category_id') if data.get('category_id') else None,
-        product_id
-    ))
-    conn.commit()
-    conn.close()
-    return jsonify({'status': 'success', 'message': 'Product updated!'})
-
-@app.route('/api/products_with_category')
-@login_required
-def get_products_with_category():
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''
-        SELECT p.*, c.name_ru as category_ru, c.name_en as category_en, 
-               c.icon as category_icon, c.color as category_color
-        FROM products p LEFT JOIN categories c ON p.category_id = c.id
-        ORDER BY p.id DESC
-    ''')
-    products = [dict(row) for row in c.fetchall()]
-    conn.close()
-    return jsonify(products)
-
-@app.route('/api/sales', methods=['POST'])
-@login_required
-def create_sale():
-    data = request.json
-    conn = get_db()
-    c = conn.cursor()
-    
-    invoice_no = f"INV-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
-    
-    try:
-        customer_discount = 0
-        customer_id = data.get('customer_id')
-        if customer_id:
-            c.execute('SELECT discount_rate FROM customers WHERE customer_id = ?', (customer_id,))
-            result = c.fetchone()
-            if result:
-                customer_discount = result['discount_rate']
-        
-        items = data.get('items', [])
-        subtotal = sum(item['price'] * (item['quantity'] or item['weight'] or 0) for item in items)
-        customer_discount_amount = subtotal * (customer_discount / 100)
-        manual_discount = float(data.get('discount', 0))
-        total_discount = customer_discount_amount + manual_discount
-        total_amount = subtotal - total_discount
-        
-        c.execute('''
-            INSERT INTO sales (invoice_no, employee_id, customer_id, customer_name, 
-                               sale_date, total_amount, discount, payment_method)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            invoice_no,
-            session.get('user_id'),
-            data.get('customer_id'),
-            data.get('customer_name', 'Walk-in Customer'),
-            datetime.now().isoformat(),
-            total_amount,
-            total_discount,
-            data.get('payment_method', 'cash')
-        ))
-        
-        sale_id = c.lastrowid
-        
-        for item in items:
-            # Determine what to deduct
-            if item.get('unit_type') == 'weight':
-                # Deduct weight
-                weight_sold = item.get('weight', 0)
-                c.execute('''
-                    UPDATE products SET weight = weight - ? 
-                    WHERE id = ? AND weight >= ?
-                ''', (weight_sold, item['product_id'], weight_sold))
-                
-                c.execute('''
-                    INSERT INTO sale_items (sale_id, product_id, quantity, weight, unit_type, price)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (
-                    sale_id,
-                    item['product_id'],
-                    0,
-                    weight_sold,
-                    'weight',
-                    item['price']
-                ))
-            else:
-                # Deduct quantity
-                qty_sold = item.get('quantity', 0)
-                c.execute('''
-                    UPDATE products SET quantity = quantity - ? 
-                    WHERE id = ? AND quantity >= ?
-                ''', (qty_sold, item['product_id'], qty_sold))
-                
-                c.execute('''
-                    INSERT INTO sale_items (sale_id, product_id, quantity, weight, unit_type, price)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (
-                    sale_id,
-                    item['product_id'],
-                    qty_sold,
-                    0,
-                    'qty',
-                    item['price']
-                ))
-        
-        conn.commit()
-        
-        # Auto backup
-        try:
-            from backup import auto_backup
-            auto_backup()
-        except:
-            pass
-        
-        return jsonify({
-            'status': 'success',
-            'invoice_no': invoice_no,
-            'subtotal': subtotal,
-            'customer_discount': customer_discount_amount,
-            'manual_discount': manual_discount,
-            'total_discount': total_discount,
-            'total': total_amount
-        })
-    except Exception as e:
-        conn.rollback()
-        return jsonify({'status': 'error', 'message': str(e)})
-    finally:
-        conn.close()
