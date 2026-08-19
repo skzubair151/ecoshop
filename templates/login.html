@@ -7,67 +7,166 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             background: linear-gradient(135deg, #1a73e8, #0d47a1);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            min-height: 100vh;
         }
         .login-container {
             background: white;
-            padding: 40px;
+            padding: 40px 50px;
             border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            text-align: center;
         }
-        .login-container h1 { text-align: center; color: #1a73e8; font-size: 32px; }
-        .login-container .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        
+        /* ===== LOGO STYLES ===== */
+        .logo-container {
+            margin-bottom: 15px;
+        }
+        .logo-container img {
+            max-width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .logo-text {
+            font-size: 36px;
+            font-weight: 900;
+            color: #1a73e8;
+            letter-spacing: 2px;
+        }
+        .logo-text span {
+            color: #ff9800;
+        }
+        .logo-subtitle {
+            font-size: 13px;
+            color: #888;
+            margin-top: -5px;
+            letter-spacing: 3px;
+            font-weight: 500;
+        }
+        
+        .login-container .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 16px;
+            transition: border 0.3s;
+            background: #f8f9fa;
         }
-        .form-group input:focus { border-color: #1a73e8; outline: none; }
+        .form-group input:focus {
+            border-color: #1a73e8;
+            outline: none;
+            background: white;
+        }
         .login-btn {
             width: 100%;
             padding: 14px;
-            background: #1a73e8;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            transition: 0.3s;
         }
-        .login-btn:hover { background: #0d47a1; }
-        .error-msg { background: #ffebee; color: #c62828; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; }
-        .footer { text-align: center; margin-top: 20px; color: #999; font-size: 12px; }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(26,115,232,0.4);
+        }
+        .error-msg {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+        .footer strong { color: #1a73e8; }
         .credentials-hint {
             background: #f5f5f5;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 20px;
             font-size: 13px;
             border: 1px solid #e0e0e0;
+            text-align: left;
         }
-        .credentials-hint .row { display: flex; justify-content: space-between; padding: 3px 0; }
+        .credentials-hint .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+        }
         .credentials-hint strong { color: #1a73e8; }
+        .admin-badge {
+            background: #ff9800;
+            color: white;
+            padding: 0 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        .staff-badge {
+            background: #2196f3;
+            color: white;
+            padding: 0 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>🏪 EcoShop</h1>
+        
+        <!-- ===== LOGO ===== -->
+        <div class="logo-container">
+            <!-- Option 1: Image Logo (uncomment and use) -->
+            <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="EcoShop Logo"> -->
+            
+            <!-- Option 2: Text Logo (currently active) -->
+            <div class="logo-text">🏪 ECO<span>SHOP</span></div>
+            <div class="logo-subtitle">SUPERMARKET SOFTWARE</div>
+        </div>
+        
         <p class="subtitle">Super Shop Management System</p>
         
         <div class="credentials-hint">
-            <div class="row"><span>🔐 Admin: <strong>ADMIN001</strong></span><span>Password: <strong>admin123</strong></span></div>
-            <div class="row"><span>👤 Staff: <strong>EMP001</strong></span><span>Password: <strong>staff123</strong></span></div>
+            <div class="row">
+                <span>🔐 <strong>ADMIN001</strong> <span class="admin-badge">Admin</span></span>
+                <span>Password: <strong>admin123</strong></span>
+            </div>
+            <div class="row">
+                <span>👤 <strong>EMP001</strong> <span class="staff-badge">Staff</span></span>
+                <span>Password: <strong>staff123</strong></span>
+            </div>
         </div>
         
         <div class="error-msg" id="error-msg">❌ Invalid credentials!</div>
@@ -85,7 +184,7 @@
         </form>
         
         <div class="footer">
-            <p>EcoShop © 2026 | Developed by Zubair 📞 +996 990 115 990</p>
+            <p>EcoShop © 2026 | Developed by <strong>ZUBAIR</strong> 📞 +996 990 115 990</p>
         </div>
     </div>
 

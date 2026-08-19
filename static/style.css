@@ -1,0 +1,48 @@
+/* ===== LOGO STYLES ===== */
+.logo h1 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+}
+
+.logo h1 span {
+    font-size: 32px;
+}
+
+.logo img {
+    max-height: 50px;
+    width: auto;
+    display: block;
+}
+
+.logo .developer-info {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.logo .phone-number {
+    font-size: 16px;
+    color: #FFD700;
+    font-weight: bold;
+}
+
+/* Login page logo styles */
+.logo-text {
+    font-size: 36px;
+    font-weight: 900;
+    color: #1a73e8;
+    letter-spacing: 2px;
+}
+
+.logo-text span {
+    color: #ff9800;
+}
+
+.logo-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-top: -5px;
+    letter-spacing: 3px;
+    font-weight: 500;
+}
