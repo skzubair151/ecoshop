@@ -10,17 +10,27 @@
 
     <!-- ===== HEADER ===== -->
     <header>
-        <div class="logo">
-            <h1>ECO<span>SHOP</span></h1>
-            <div class="slogan">"Smart Shop, Simple Life"</div>
+        <div class="header-left">
+            <div class="logo-icon">🏪</div>
+            <div class="logo-text">
+                <h1>ECO<span>SHOP</span></h1>
+                <div class="slogan">"Smart Shop, Simple Life"</div>
+            </div>
+        </div>
+        
+        <div class="header-center">
             <div class="developer-info">
                 <span id="dev-en">Developed by ZUBAIR</span>
                 <span id="dev-ru" style="display:none;">Разработано ZUBAIR</span>
-                <span class="phone-number">📞 +996 990 115 990</span>
+            </div>
+            <div class="contact-info">
+                <span class="phone">📞 +996 990 115 990</span>
+                <span class="email">📧 skzubair151@gmail.com</span>
             </div>
         </div>
+        
         <div class="header-right">
-            <div>
+            <div class="lang-buttons">
                 <button class="lang-btn" id="lang-en" onclick="setLanguage('en')">🇬🇧 EN</button>
                 <button class="lang-btn" id="lang-ru" onclick="setLanguage('ru')">🇷🇺 RU</button>
             </div>
@@ -272,7 +282,7 @@
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="bg-status">Current: Default</p>
                 </div>
 
-                <!-- ===== NAVIGATION STYLE ===== -->
+                <!-- Navigation Style -->
                 <div class="settings-card">
                     <h3 id="settings-nav">📐 Navigation Style</h3>
                     <select id="nav-style-select" style="width:100%; padding:10px; border-radius:10px; border:2px solid #e0e0e0;">
@@ -283,7 +293,7 @@
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="nav-style-status">Current: Top Bar</p>
                 </div>
 
-                <!-- ===== BACKUP ===== -->
+                <!-- Backup -->
                 <div class="settings-card" style="grid-column: 1 / -1;">
                     <h3 id="settings-backup">💾 Backup to Google Drive</h3>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -1339,7 +1349,6 @@
         // ============================================================
         let isFullscreen = false;
         let isTabView = false;
-        let currentTransparency = 0;
         let currentBgImage = null;
 
         function toggleFullscreen() {
@@ -1445,7 +1454,6 @@
                 document.getElementById('bg-status').textContent = 'Current: Custom Image';
             }
             
-            // Load navigation style
             loadNavStyle();
         }
 
@@ -1462,7 +1470,6 @@
         function applyNavStyle() {
             const style = document.getElementById('nav-style-select').value;
             const nav = document.getElementById('main-nav');
-            const container = document.querySelector('.container');
             const body = document.body;
             const t = translations[currentLang];
             
@@ -1644,6 +1651,51 @@
         }
 
         // ============================================================
+        //  KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                showTab('sales');
+                document.getElementById('scan-barcode').focus();
+                document.getElementById('scan-barcode').select();
+            }
+            
+            if (e.key === 'F5') {
+                e.preventDefault();
+                if (confirm('Are you sure you want to logout?')) {
+                    window.location.href = '/logout';
+                }
+            }
+            
+            if (e.key === 'F1') {
+                e.preventDefault();
+                alert('📋 Keyboard Shortcuts:\n\n' +
+                      'F2 - Start New Sale\n' +
+                      'F5 - Logout\n' +
+                      'Enter - Add to Cart (when barcode field focused)\n' +
+                      'Esc - Clear Cart\n' +
+                      'Ctrl+Enter - Checkout');
+            }
+            
+            if (e.key === 'Escape' && document.getElementById('sales').classList.contains('active')) {
+                if (cart.length > 0) {
+                    if (confirm('Clear cart?')) {
+                        cart = [];
+                        renderCart();
+                    }
+                }
+            }
+            
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                if (document.getElementById('sales').classList.contains('active') && cart.length > 0) {
+                    e.preventDefault();
+                    checkout();
+                }
+            }
+        });
+
+        // ============================================================
         //  EVENT LISTENERS
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
@@ -1676,8 +1728,6 @@
             loadDashboard();
             loadCategories();
             loadProducts();
-            
-            // Load navigation style
             loadNavStyle();
         });
     </script>

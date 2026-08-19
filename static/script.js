@@ -12,7 +12,6 @@ function changeNavStyle(style) {
 function applyNavStyle() {
     const style = document.getElementById('nav-style-select').value;
     const nav = document.getElementById('main-nav');
-    const container = document.querySelector('.container');
     const body = document.body;
     const t = translations[currentLang];
     
@@ -43,7 +42,6 @@ function loadNavStyle() {
 //  KEYBOARD SHORTCUTS
 // ============================================================
 document.addEventListener('keydown', function(e) {
-    // F2 - Start new sale (focus on barcode input)
     if (e.key === 'F2') {
         e.preventDefault();
         showTab('sales');
@@ -51,7 +49,6 @@ document.addEventListener('keydown', function(e) {
         document.getElementById('scan-barcode').select();
     }
     
-    // F5 - Logout
     if (e.key === 'F5') {
         e.preventDefault();
         if (confirm('Are you sure you want to logout?')) {
@@ -59,7 +56,6 @@ document.addEventListener('keydown', function(e) {
         }
     }
     
-    // F1 - Help
     if (e.key === 'F1') {
         e.preventDefault();
         alert('📋 Keyboard Shortcuts:\n\n' +
@@ -70,7 +66,6 @@ document.addEventListener('keydown', function(e) {
               'Ctrl+Enter - Checkout');
     }
     
-    // ESC - Clear Cart
     if (e.key === 'Escape' && document.getElementById('sales').classList.contains('active')) {
         if (cart.length > 0) {
             if (confirm('Clear cart?')) {
@@ -80,7 +75,6 @@ document.addEventListener('keydown', function(e) {
         }
     }
     
-    // Ctrl+Enter - Checkout
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         if (document.getElementById('sales').classList.contains('active') && cart.length > 0) {
             e.preventDefault();
