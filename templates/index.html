@@ -8,32 +8,27 @@
 </head>
 <body>
 
-    <!-- ===== HEADER WITH LOGO ===== -->
+    <!-- ===== HEADER ===== -->
     <header>
         <div class="logo">
-            <!-- Option 1: Image Logo (uncomment and use) -->
-            <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="EcoShop" style="height:50px;"> -->
-            
-            <!-- Option 2: Text Logo -->
-            <h1>
-                <span id="shop-name-en">🏪 ECO<span style="color:#FFD700;">SHOP</span></span>
-                <span id="shop-name-ru" style="display:none;">🏪 ЭКО<span style="color:#FFD700;">SHOP</span></span>
-            </h1>
+            <h1>ECO<span>SHOP</span></h1>
+            <div class="slogan">"Smart Shop, Simple Life"</div>
             <div class="developer-info">
                 <span id="dev-en">Developed by ZUBAIR</span>
                 <span id="dev-ru" style="display:none;">Разработано ZUBAIR</span>
-                <br>
                 <span class="phone-number">📞 +996 990 115 990</span>
             </div>
         </div>
-        <div>
-            <button class="lang-btn" id="lang-en" onclick="setLanguage('en')">🇬🇧 EN</button>
-            <button class="lang-btn" id="lang-ru" onclick="setLanguage('ru')">🇷🇺 RU</button>
-        </div>
-        <div class="user-info">
-            <span class="name" id="user-name">{{ user.user_name }}</span>
-            <span class="role" id="user-role">{{ user.user_role }}</span>
-            <a href="/logout"><button class="logout-btn" id="logout-btn">🚪 Logout</button></a>
+        <div class="header-right">
+            <div>
+                <button class="lang-btn" id="lang-en" onclick="setLanguage('en')">🇬🇧 EN</button>
+                <button class="lang-btn" id="lang-ru" onclick="setLanguage('ru')">🇷🇺 RU</button>
+            </div>
+            <div class="user-info">
+                <span class="name" id="user-name">{{ user.user_name }}</span>
+                <span class="role" id="user-role">{{ user.user_role }}</span>
+                <a href="/logout"><button class="logout-btn">🚪 Logout</button></a>
+            </div>
         </div>
     </header>
 
@@ -234,16 +229,22 @@
         <div id="settings" class="page">
             <h2 id="settings-title">⚙️ Settings</h2>
             <div class="settings-grid">
+                
+                <!-- Full Window Mode -->
                 <div class="settings-card">
                     <h3 id="settings-fullscreen">🖥️ Full Window Mode</h3>
                     <button class="btn btn-success" onclick="toggleFullscreen()" id="fullscreen-btn">⛶ Toggle Full Screen</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="fullscreen-status">Current: Off</p>
                 </div>
+
+                <!-- Tab View -->
                 <div class="settings-card">
                     <h3 id="settings-tabview">📑 Tab View</h3>
                     <button class="btn btn-warning" onclick="toggleTabView()" id="tabview-btn">🔀 Switch View</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="tabview-status">Current: Classic</p>
                 </div>
+
+                <!-- Font Selection -->
                 <div class="settings-card">
                     <h3 id="settings-font">🔤 Font Selection</h3>
                     <select id="font-select" style="width:100%; padding:10px;">
@@ -260,18 +261,29 @@
                     <br>
                     <button class="btn btn-success" onclick="applyFontSettings()" style="margin-top:10px;">✅ Apply Font</button>
                 </div>
+
+                <!-- Background Image -->
                 <div class="settings-card">
                     <h3 id="settings-bg">🖼️ Background Image</h3>
                     <input type="file" id="bg-image-upload" accept="image/*">
-                    <br>
-                    <label style="margin-top:10px; display:block;">Transparency (Max 50%):</label>
-                    <input type="range" id="bg-transparency" min="0" max="50" value="0">
-                    <span id="bg-transparency-label">0%</span>
                     <br>
                     <button class="btn btn-success" onclick="applyBackgroundSettings()" style="margin-top:10px;">✅ Apply Background</button>
                     <button class="btn btn-danger" onclick="resetBackgroundImage()" style="margin-top:5px;">🔄 Reset to Default</button>
                     <p style="margin-top:5px; font-size:12px; color:#888;" id="bg-status">Current: Default</p>
                 </div>
+
+                <!-- ===== NAVIGATION STYLE ===== -->
+                <div class="settings-card">
+                    <h3 id="settings-nav">📐 Navigation Style</h3>
+                    <select id="nav-style-select" style="width:100%; padding:10px; border-radius:10px; border:2px solid #e0e0e0;">
+                        <option value="topbar">Top Bar (Horizontal)</option>
+                        <option value="sidebar">Sidebar (Left)</option>
+                    </select>
+                    <button class="btn btn-success" onclick="applyNavStyle()" style="margin-top:10px;">✅ Apply Navigation Style</button>
+                    <p style="margin-top:5px; font-size:12px; color:#888;" id="nav-style-status">Current: Top Bar</p>
+                </div>
+
+                <!-- ===== BACKUP ===== -->
                 <div class="settings-card" style="grid-column: 1 / -1;">
                     <h3 id="settings-backup">💾 Backup to Google Drive</h3>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -290,6 +302,7 @@
                     </div>
                     <div id="backup-message" style="margin-top:10px; font-weight:bold;"></div>
                 </div>
+
             </div>
         </div>
 
@@ -358,6 +371,7 @@
         </div>
     </footer>
 
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
         // ============================================================
         //  TRANSLATIONS
@@ -397,6 +411,7 @@
                 settings_tabview: '📑 Tab View',
                 settings_font: '🔤 Font Selection',
                 settings_bg: '🖼️ Background Image',
+                settings_nav: '📐 Navigation Style',
                 toggle_fullscreen: '⛶ Toggle Full Screen',
                 switch_view: '🔀 Switch View',
                 reset_bg: '🔄 Reset to Default',
@@ -434,7 +449,9 @@
                 search: 'Search', add_new: 'Add New',
                 select_customer: '-- Select Customer --',
                 no_customers: 'No customers found',
-                unit_qty: 'Quantity (Pieces)', unit_weight: 'Weight (KG)'
+                unit_qty: 'Quantity (Pieces)', unit_weight: 'Weight (KG)',
+                topbar: 'Top Bar (Horizontal)',
+                sidebar: 'Sidebar (Left)'
             },
             ru: {
                 shop_name: 'ЭкоShop',
@@ -470,6 +487,7 @@
                 settings_tabview: '📑 Вкладки',
                 settings_font: '🔤 Выбор шрифта',
                 settings_bg: '🖼️ Фоновое изображение',
+                settings_nav: '📐 Стиль навигации',
                 toggle_fullscreen: '⛶ Полный экран',
                 switch_view: '🔀 Сменить вид',
                 reset_bg: '🔄 Сбросить',
@@ -507,7 +525,9 @@
                 search: 'Поиск', add_new: 'Добавить',
                 select_customer: '-- Выберите клиента --',
                 no_customers: 'Клиенты не найдены',
-                unit_qty: 'Количество (штуки)', unit_weight: 'Вес (КГ)'
+                unit_qty: 'Количество (штуки)', unit_weight: 'Вес (КГ)',
+                topbar: 'Верхняя панель',
+                sidebar: 'Боковая панель'
             }
         };
 
@@ -531,8 +551,6 @@
             document.getElementById('lang-ru').classList.toggle('active', lang === 'ru');
             const t = translations[lang];
             
-            document.getElementById('shop-name-en').textContent = '🏪 ECO' + (lang === 'en' ? 'SHOP' : 'SHOP');
-            document.getElementById('shop-name-ru').textContent = '🏪 ЭКО' + (lang === 'ru' ? 'SHOP' : 'SHOP');
             document.getElementById('footer-shop-name').textContent = t.footer_shop;
             
             document.getElementById('tab-dashboard').textContent = t.dashboard;
@@ -583,7 +601,6 @@
             document.getElementById('cart-th-barcode').textContent = t.barcode;
             document.getElementById('cart-th-name').textContent = t.name;
             document.getElementById('cart-th-price').textContent = t.price;
-            document.getElementById('cart-th-qty').textContent = 'Qty/Weight';
             document.getElementById('cart-th-total').textContent = t.total;
             document.getElementById('cart-th-action').textContent = t.actions;
             document.getElementById('payment-label').textContent = t.payment_method;
@@ -622,8 +639,14 @@
             document.getElementById('settings-tabview').textContent = t.settings_tabview;
             document.getElementById('settings-font').textContent = t.settings_font;
             document.getElementById('settings-bg').textContent = t.settings_bg;
+            document.getElementById('settings-nav').textContent = t.settings_nav;
             document.getElementById('fullscreen-btn').innerHTML = t.toggle_fullscreen;
             document.getElementById('tabview-btn').innerHTML = t.switch_view;
+            
+            // Navigation style options
+            const navSelect = document.getElementById('nav-style-select');
+            navSelect.options[0].text = t.topbar;
+            navSelect.options[1].text = t.sidebar;
             
             if (currentUserRole === 'Admin') {
                 document.getElementById('emp-title').textContent = t.employee_management;
@@ -989,7 +1012,7 @@
         }
 
         // ============================================================
-        //  SALES - ADD TO CART
+        //  SALES FUNCTIONS
         // ============================================================
         function addToCart() {
             const barcode = document.getElementById('scan-barcode').value.trim();
@@ -1049,9 +1072,6 @@
                 .catch(err => alert('❌ Error: ' + err.message));
         }
 
-        // ============================================================
-        //  SALES - RENDER CART
-        // ============================================================
         function renderCart() {
             const tbody = document.getElementById('cart-items');
             tbody.innerHTML = '';
@@ -1116,9 +1136,6 @@
             renderCart();
         }
 
-        // ============================================================
-        //  SALES - CHECKOUT
-        // ============================================================
         function checkout() {
             if (cart.length === 0) { alert('Cart is empty!'); return; }
 
@@ -1371,70 +1388,37 @@
 
         function applyBackgroundSettings() {
             const fileInput = document.getElementById('bg-image-upload');
-            const transparency = parseInt(document.getElementById('bg-transparency').value);
-            
-            currentTransparency = transparency;
-            document.getElementById('bg-transparency-label').textContent = transparency + '%';
-            
             if (fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     currentBgImage = e.target.result;
-                    applyBackground();
+                    document.body.style.backgroundImage = `url('${currentBgImage}')`;
+                    document.body.style.backgroundSize = 'cover';
+                    document.body.style.backgroundPosition = 'center';
+                    document.body.style.backgroundAttachment = 'fixed';
+                    document.getElementById('bg-status').textContent = 'Current: Custom Image';
+                    localStorage.setItem('ecoshop_bg', currentBgImage);
+                    alert('✅ Background applied!');
                 };
                 reader.readAsDataURL(fileInput.files[0]);
-            } else if (currentBgImage) {
-                applyBackground();
             } else {
                 alert('⚠️ Please select an image first!');
-            }
-        }
-
-        function applyBackground() {
-            if (currentBgImage) {
-                const transparency = currentTransparency / 100;
-                document.body.style.backgroundImage = `url('${currentBgImage}')`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-                document.body.style.backgroundAttachment = 'fixed';
-                
-                const overlay = document.getElementById('bg-overlay');
-                if (!overlay) {
-                    const div = document.createElement('div');
-                    div.id = 'bg-overlay';
-                    div.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;';
-                    document.body.prepend(div);
-                }
-                document.getElementById('bg-overlay').style.background = `rgba(255, 255, 255, ${transparency})`;
-                
-                document.getElementById('bg-status').textContent = 'Current: Custom Image (' + currentTransparency + '% transparency)';
-                
-                localStorage.setItem('ecoshop_bg', currentBgImage);
-                localStorage.setItem('ecoshop_transparency', currentTransparency);
-                alert('✅ Background applied with ' + currentTransparency + '% transparency!');
             }
         }
 
         function resetBackgroundImage() {
             const t = translations[currentLang];
             currentBgImage = null;
-            currentTransparency = 0;
             
             document.body.style.backgroundImage = '';
             document.body.style.backgroundSize = '';
             document.body.style.backgroundPosition = '';
             document.body.style.backgroundAttachment = '';
             
-            const overlay = document.getElementById('bg-overlay');
-            if (overlay) overlay.remove();
-            
             document.getElementById('bg-status').textContent = t.current_default;
             document.getElementById('bg-image-upload').value = '';
-            document.getElementById('bg-transparency').value = 0;
-            document.getElementById('bg-transparency-label').textContent = '0%';
             
             localStorage.removeItem('ecoshop_bg');
-            localStorage.removeItem('ecoshop_transparency');
             alert('✅ Background reset to default!');
         }
 
@@ -1452,13 +1436,56 @@
             }
             
             const savedBg = localStorage.getItem('ecoshop_bg');
-            const savedTrans = localStorage.getItem('ecoshop_transparency');
             if (savedBg) {
                 currentBgImage = savedBg;
-                currentTransparency = parseInt(savedTrans) || 0;
-                document.getElementById('bg-transparency').value = currentTransparency;
-                document.getElementById('bg-transparency-label').textContent = currentTransparency + '%';
-                applyBackground();
+                document.body.style.backgroundImage = `url('${currentBgImage}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
+                document.getElementById('bg-status').textContent = 'Current: Custom Image';
+            }
+            
+            // Load navigation style
+            loadNavStyle();
+        }
+
+        // ============================================================
+        //  NAVIGATION STYLE
+        // ============================================================
+        function changeNavStyle(style) {
+            const t = translations[currentLang];
+            document.getElementById('nav-style-status').textContent = 
+                `Current: ${style === 'topbar' ? t.topbar : t.sidebar}`;
+            localStorage.setItem('ecoshop_nav_style', style);
+        }
+
+        function applyNavStyle() {
+            const style = document.getElementById('nav-style-select').value;
+            const nav = document.getElementById('main-nav');
+            const container = document.querySelector('.container');
+            const body = document.body;
+            const t = translations[currentLang];
+            
+            if (style === 'sidebar') {
+                nav.classList.add('sidebar');
+                body.classList.add('sidebar-active');
+                localStorage.setItem('ecoshop_nav_style', 'sidebar');
+                document.getElementById('nav-style-status').textContent = `Current: ${t.sidebar}`;
+            } else {
+                nav.classList.remove('sidebar');
+                body.classList.remove('sidebar-active');
+                localStorage.setItem('ecoshop_nav_style', 'topbar');
+                document.getElementById('nav-style-status').textContent = `Current: ${t.topbar}`;
+            }
+            
+            alert(`✅ Navigation style changed to ${style === 'topbar' ? t.topbar : t.sidebar}!`);
+        }
+
+        function loadNavStyle() {
+            const saved = localStorage.getItem('ecoshop_nav_style');
+            if (saved) {
+                document.getElementById('nav-style-select').value = saved;
+                applyNavStyle();
             }
         }
 
@@ -1617,56 +1644,6 @@
         }
 
         // ============================================================
-        //  KEYBOARD SHORTCUTS
-        // ============================================================
-        document.addEventListener('keydown', function(e) {
-            // F2 - Start new sale (focus on barcode input)
-            if (e.key === 'F2') {
-                e.preventDefault();
-                showTab('sales');
-                document.getElementById('scan-barcode').focus();
-                document.getElementById('scan-barcode').select();
-            }
-            
-            // F5 - Logout
-            if (e.key === 'F5') {
-                e.preventDefault();
-                if (confirm('Are you sure you want to logout?')) {
-                    window.location.href = '/logout';
-                }
-            }
-            
-            // F1 - Help
-            if (e.key === 'F1') {
-                e.preventDefault();
-                alert('📋 Keyboard Shortcuts:\n\n' +
-                      'F2 - Start New Sale\n' +
-                      'F5 - Logout\n' +
-                      'Enter - Add to Cart (when barcode field focused)\n' +
-                      'Esc - Clear Cart\n' +
-                      'Ctrl+Enter - Checkout');
-            }
-            
-            // ESC - Clear Cart
-            if (e.key === 'Escape' && document.getElementById('sales').classList.contains('active')) {
-                if (cart.length > 0) {
-                    if (confirm('Clear cart?')) {
-                        cart = [];
-                        renderCart();
-                    }
-                }
-            }
-            
-            // Ctrl+Enter - Checkout
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                if (document.getElementById('sales').classList.contains('active') && cart.length > 0) {
-                    e.preventDefault();
-                    checkout();
-                }
-            }
-        });
-
-        // ============================================================
         //  EVENT LISTENERS
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
@@ -1681,10 +1658,6 @@
                 if (e.key === 'Enter') {
                     document.getElementById('scan-barcode').focus();
                 }
-            });
-
-            document.getElementById('bg-transparency').addEventListener('input', function() {
-                document.getElementById('bg-transparency-label').textContent = this.value + '%';
             });
 
             document.getElementById('font-size-slider').addEventListener('input', function() {
@@ -1703,6 +1676,9 @@
             loadDashboard();
             loadCategories();
             loadProducts();
+            
+            // Load navigation style
+            loadNavStyle();
         });
     </script>
 

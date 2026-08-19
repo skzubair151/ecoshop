@@ -34,11 +34,11 @@ body {
 }
 
 /* ============================================================
-   HEADER
+   HEADER WITH LOGO & SLOGAN
    ============================================================ */
 header {
-    background: linear-gradient(135deg, #1a73e8, #0d47a1);
-    padding: 12px 25px;
+    background: linear-gradient(135deg, #0d47a1, #1a73e8);
+    padding: 10px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -50,20 +50,14 @@ header {
 
 header .logo {
     display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-header .logo img {
-    height: 45px;
-    width: auto;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    flex-direction: column;
+    gap: 2px;
 }
 
 header .logo h1 {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 900;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
     color: white;
     text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -72,13 +66,33 @@ header .logo h1 span {
     color: #FFD700;
 }
 
+header .logo .slogan {
+    font-size: 14px;
+    color: #FFD700;
+    font-weight: 600;
+    letter-spacing: 2px;
+    font-style: italic;
+    margin-top: -2px;
+}
+
+header .logo .slogan::before {
+    content: '"';
+    color: #ff6b6b;
+}
+
+header .logo .slogan::after {
+    content: '"';
+    color: #ff6b6b;
+}
+
 header .logo .developer-info {
-    font-size: 13px;
+    font-size: 12px;
     color: rgba(255,255,255,0.85);
+    margin-top: 2px;
 }
 
 header .logo .phone-number {
-    font-size: 15px;
+    font-size: 14px;
     color: #FFD700;
     font-weight: bold;
 }
@@ -223,23 +237,24 @@ header .header-right {
 }
 
 /* ============================================================
-   NAVIGATION
+   NAVIGATION - TOP BAR (Default)
    ============================================================ */
-nav {
+#main-nav {
     background: rgba(255,255,255,0.95);
     backdrop-filter: blur(20px);
     padding: 10px 20px;
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
-    border-bottom: 3px solid var(--primary);
+    border-bottom: 3px solid #1a73e8;
     position: sticky;
     top: 0;
     z-index: 99;
     box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    transition: var(--transition);
 }
 
-nav button {
+#main-nav button {
     padding: 10px 22px;
     border: none;
     background: transparent;
@@ -255,40 +270,81 @@ nav button {
     position: relative;
 }
 
-nav button::after {
+#main-nav button::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 50%;
     width: 0;
     height: 3px;
-    background: var(--primary);
+    background: #1a73e8;
     transition: var(--transition);
     transform: translateX(-50%);
     border-radius: 3px;
 }
 
-nav button:hover {
+#main-nav button:hover {
     background: rgba(26,115,232,0.08);
-    color: var(--primary);
+    color: #1a73e8;
 }
 
-nav button:hover::after {
+#main-nav button:hover::after {
     width: 60%;
 }
 
-nav button.active {
+#main-nav button.active {
     background: linear-gradient(135deg, #1a73e8, #0d47a1);
     color: white;
     box-shadow: 0 4px 20px rgba(26,115,232,0.3);
 }
 
-nav button.active::after {
+#main-nav button.active::after {
     width: 0;
 }
 
-nav button .nav-icon {
-    font-size: 18px;
+/* ============================================================
+   NAVIGATION - SIDEBAR (Optional)
+   ============================================================ */
+#main-nav.sidebar {
+    position: fixed;
+    left: 0;
+    top: 80px;
+    width: 200px;
+    height: calc(100vh - 80px);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    flex-direction: column;
+    padding: 20px 10px;
+    border-right: 3px solid #1a73e8;
+    box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    z-index: 98;
+    border-bottom: none;
+}
+
+#main-nav.sidebar button {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 16px;
+}
+
+#main-nav.sidebar button::after {
+    display: none;
+}
+
+#main-nav.sidebar button:hover {
+    background: rgba(26,115,232,0.1);
+}
+
+#main-nav.sidebar button.active {
+    background: linear-gradient(135deg, #1a73e8, #0d47a1);
+    color: white;
+    box-shadow: 0 4px 15px rgba(26,115,232,0.3);
+}
+
+.sidebar-active .container {
+    margin-left: 220px;
+    max-width: calc(100% - 220px);
 }
 
 /* ============================================================
@@ -298,6 +354,7 @@ nav button .nav-icon {
     max-width: 1400px;
     margin: 20px auto;
     padding: 0 20px;
+    transition: var(--transition);
 }
 
 .page {
@@ -320,7 +377,7 @@ nav button .nav-icon {
 }
 
 .page h2 {
-    color: var(--primary);
+    color: #1a73e8;
     font-size: 24px;
     margin-bottom: 20px;
     display: flex;
@@ -372,7 +429,7 @@ nav button .nav-icon {
 .stat-card p {
     font-size: 32px;
     font-weight: 900;
-    color: var(--primary);
+    color: #1a73e8;
     margin-top: 4px;
 }
 
@@ -443,26 +500,10 @@ tr:hover td {
 }
 
 /* ============================================================
-   PRODUCT IMAGE IN TABLES
-   ============================================================ */
-.product-img {
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    object-fit: cover;
-    border: 2px solid #e8f0fe;
-    transition: var(--transition);
-}
-
-.product-img:hover {
-    transform: scale(1.1);
-    border-color: var(--primary);
-}
-
-/* ============================================================
    FORMS
    ============================================================ */
-input, select {
+input,
+select {
     padding: 10px 14px;
     margin: 5px;
     border: 2px solid #e0e0e0;
@@ -474,8 +515,9 @@ input, select {
     max-width: 280px;
 }
 
-input:focus, select:focus {
-    border-color: var(--primary);
+input:focus,
+select:focus {
+    border-color: #1a73e8;
     outline: none;
     box-shadow: 0 0 0 4px rgba(26,115,232,0.1);
 }
@@ -526,7 +568,7 @@ footer {
 footer .footer-shop {
     font-size: 20px;
     font-weight: 700;
-    color: var(--primary);
+    color: #1a73e8;
 }
 
 footer .footer-dev {
@@ -535,7 +577,7 @@ footer .footer-dev {
 }
 
 footer .footer-dev strong {
-    color: var(--primary);
+    color: #1a73e8;
 }
 
 /* ============================================================
@@ -548,7 +590,7 @@ footer .footer-dev strong {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     z-index: 1000;
     justify-content: center;
@@ -567,12 +609,12 @@ footer .footer-dev strong {
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: fadeSlideUp 0.3s ease;
 }
 
 .modal-content h3 {
-    color: var(--primary);
+    color: #1a73e8;
     margin-bottom: 15px;
 }
 
@@ -614,7 +656,7 @@ footer .footer-dev strong {
 }
 
 /* ============================================================
-   RESPONSIVE - MOBILE FIRST
+   RESPONSIVE
    ============================================================ */
 @media (max-width: 992px) {
     .settings-grid {
@@ -629,78 +671,98 @@ footer .footer-dev strong {
         gap: 10px;
         padding: 12px;
     }
-    
+
     header .logo {
-        flex-direction: column;
+        align-items: center;
     }
-    
+
     header .logo h1 {
-        font-size: 22px;
+        font-size: 24px;
     }
-    
+
     .header-right {
         justify-content: center;
         width: 100%;
     }
-    
+
     .user-info {
         flex-wrap: wrap;
         justify-content: center;
     }
-    
-    nav button {
+
+    #main-nav button {
         width: 100%;
         justify-content: center;
         padding: 10px;
         font-size: 13px;
     }
-    
-    nav button::after {
+
+    #main-nav button::after {
         display: none;
     }
-    
+
+    #main-nav.sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        top: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
+        border-right: none;
+        border-bottom: 3px solid #1a73e8;
+    }
+
+    #main-nav.sidebar button {
+        width: auto;
+        justify-content: center;
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .sidebar-active .container {
+        margin-left: 0;
+        max-width: 100%;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 12px;
     }
-    
+
     .stat-card {
         padding: 15px;
     }
-    
+
     .stat-card p {
         font-size: 24px;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
     }
-    
+
     .page {
         padding: 15px;
     }
-    
+
     .container {
         padding: 0 10px;
         margin: 10px auto;
     }
-    
+
     .category-item {
         min-width: 70px;
         padding: 8px 14px;
         font-size: 12px;
     }
-    
-    th, td {
+
+    th,
+    td {
         padding: 8px 10px;
         font-size: 12px;
     }
-    
-    .product-img {
-        width: 35px;
-        height: 35px;
-    }
-    
+
     .btn {
         padding: 8px 16px;
         font-size: 12px;
@@ -712,24 +774,25 @@ footer .footer-dev strong {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
-    
+
     .stat-card {
         padding: 12px;
     }
-    
+
     .stat-card p {
         font-size: 20px;
     }
-    
+
     .stat-card .icon {
         font-size: 24px;
     }
-    
+
     .page h2 {
         font-size: 18px;
     }
-    
-    input, select {
+
+    input,
+    select {
         max-width: 100%;
         font-size: 12px;
         padding: 8px 10px;
@@ -750,10 +813,10 @@ footer .footer-dev strong {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary);
+    background: #1a73e8;
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-dark);
+    background: #0d47a1;
 }
